@@ -1,0 +1,1 @@
+# clipopera_assets

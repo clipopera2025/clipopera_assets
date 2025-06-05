@@ -1,0 +1,3 @@
+# Ignore environment variable definitions
+blog-to-reddit/.env
+__pycache__/

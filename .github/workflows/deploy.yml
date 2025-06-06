@@ -1,0 +1,31 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Lint with black
+      run: black --check .
+
+    - name: Run tests
+      run: python -m py_compile create_notion_page.py clipopera_full_stack.py totango_api.py app.py
+
+    - name: Deploy to Render (example webhook)
+      run: |
+        curl -X POST https://api.render.com/deploy/srv-<service-id>?key=<deploy-key>

@@ -16,8 +16,10 @@ headers = {
     "Content-Type": "application/json",
 }
 
-# Determine markdown files to upload
-md_files = [f for f in os.listdir('.') if f.endswith('.md')]
+# Determine markdown files to upload from the logs directory
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+LOGS_DIR = os.path.join(SCRIPT_DIR, "logs")
+md_files = [os.path.join(LOGS_DIR, f) for f in os.listdir(LOGS_DIR) if f.endswith('.md')]
 
 for md_path in md_files:
     with open(md_path, 'r', encoding='utf-8') as f:

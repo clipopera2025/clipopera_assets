@@ -83,6 +83,7 @@ Use the CLI tool `create_notion_page.py` to automatically send new project data 
 export NOTION_TOKEN=secret_abc123
 export NOTION_DATABASE_ID=abc-123-def-456
 export DRIVE_FOLDER_ID=https://drive.google.com/drive/folders/example
+export DRIVE_ROOT_FOLDER_ID=your_drive_root_id
 export OPENAI_API_KEY=sk-...
 export GPT_WEBMASTER_ID=clip_webmaster
 export CODEX_ID=clip_codex
@@ -256,12 +257,16 @@ python totango_api.py --base_url https://api-gw-us.totango.com --create_scim_use
 
 ## 📂 Upload GPT Library to Google Drive
 
-Use `upload_gpt_library.py` to send your local GPT models to a Drive folder. Set
-`SERVICE_ACCOUNT_FILE` and `DRIVE_FOLDER_ID` in `.env` or pass them as flags.
+Use `upload_gpt_library.py` to mirror your GPT models to Google Drive. Set
+`SERVICE_ACCOUNT_FILE` and `DRIVE_ROOT_FOLDER_ID` (or `DRIVE_FOLDER_ID`) in your
+environment or pass them as flags.
 
 ```bash
-python upload_gpt_library.py --folder /path/to/your/gpt_library
+python upload_gpt_library.py /path/to/your/gpt_library --dry-run
 ```
+
+Remove `--dry-run` to upload files for real. The script saves an
+`upload_manifest.json` with Drive IDs.
 
 
 

@@ -44,3 +44,31 @@ python notion_batch_uploader.py
 ```
 
 The script scans Markdown files in `logs/` and uploads each one as a page.
+
+### Upload the Project to GitHub
+
+Follow these steps if you want to publish the uploader as its own repository:
+
+1. [Create a new repository](https://github.com/new) named
+   `fashion-alchemist-uploader` and leave the README, `.gitignore`, and license
+   unchecked.
+2. From your terminal, initialize Git and make the first commit:
+
+   ```bash
+   cd path/to/fashion-alchemist-uploader
+   git init
+   git add .
+   git commit -m "Initial commit"
+   ```
+3. Add the remote and push the `main` branch (replace `yourusername` with your
+   GitHub username):
+
+   ```bash
+   git remote add origin https://github.com/yourusername/fashion-alchemist-uploader.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+After uploading, remember to set `NOTION_TOKEN` and `NOTION_PAGE_ID`, install
+the dependencies with `pip install -r requirements.txt`, and run the uploader
+scripts as shown above.

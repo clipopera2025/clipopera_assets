@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: clipopera-backend
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: NOTION_TOKEN
+        sync: false
+      - key: DISCORD_WEBHOOK_URL
+        sync: false
+      - key: SERVICE_ACCOUNT_FILE
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GOOGLE_DRIVE_FOLDER_ID
+        sync: false
+    autoDeploy: true
+
+deployHook:
+  type: github
+  repo: clipopera2025/clipopera_assets
+  branch: main
+  autoDeploy: true
+
+staticSites:
+  - name: clipopera-assets
+    buildCommand: ""
+    staticPublishPath: "public"
+    indexDocument: index.html
+    errorDocument: 404.html
+    routes:
+      - type: rewrite
+        source: /
+        destination: /index.html

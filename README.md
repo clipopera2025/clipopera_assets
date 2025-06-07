@@ -254,6 +254,16 @@ python totango_api.py --base_url https://api-gw-us.totango.com --get_scim_users 
 python totango_api.py --base_url https://api-gw-us.totango.com --create_scim_user SERVICE user.json
 ```
 
+## 📂 Upload GPT Library to Google Drive
+
+Use `upload_gpt_library.py` to send your local GPT models to a Drive folder. Set
+`SERVICE_ACCOUNT_FILE` and `DRIVE_FOLDER_ID` in `.env` or pass them as flags.
+
+```bash
+python upload_gpt_library.py --folder /path/to/your/gpt_library
+```
+
+
 
 ## 📡 Flask Webhook Server
 

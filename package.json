@@ -1,0 +1,10 @@
+{
+  "name": "clipopera-assets",
+  "version": "1.0.0",
+  "description": "Static/Flask-based AI-enhanced toolkit for ClipOpera",
+  "scripts": {
+    "vercel-build": "echo 'No build needed for this deployment'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

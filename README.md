@@ -95,6 +95,9 @@ export GPT_MODELS_REGISTRY=/path/to/models.json
 You can copy `.env.example` to `.env` and fill in your credentials instead of
 exporting each variable manually.
 
+**Security Tip:** Keep your `.env` file private and never commit real tokens or
+API keys (including the Discord bot token) to version control.
+
 #### Usage
 
 ```bash
@@ -344,7 +347,7 @@ Use it within your React/Next.js project to render an interactive preview panel 
 
 ## 🤖 Discord Bot
 
-Use the `discord_bot.py` script to send MidJourney prompts in a channel. Set `DISCORD_BOT_TOKEN` in `.env` and run:
+Use the `discord_bot.py` script to send MidJourney prompts in a channel. Set `DISCORD_BOT_TOKEN` in `.env` and run (never share this token publicly):
 
 ```bash
 python discord_bot.py

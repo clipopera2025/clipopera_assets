@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import os
+import re
 import requests
 
 app = Flask(__name__)
@@ -34,12 +35,16 @@ def send_prompt():
     prompt = data.get("prompt")
     if not prompt:
         return jsonify({"error": "Missing prompt"}), 400
+    prompt = re.sub(r"[^\w\s.,:;'\"!?()-]", "", prompt)
     resp = requests.post(
         DISCORD_WEBHOOK_URL, json={"content": f"/imagine prompt: {prompt}"}
     )
-    if resp.status_code >= 400:
-        return jsonify({"error": "Failed to send to Discord"}), 500
-    return jsonify({"status": "Prompt sent"})
+    if resp.status_code == 204:
+        return jsonify({"status": "Prompt successfully sent"}), 200
+    return (
+        jsonify({"error": f"Failed to send prompt: {resp.text}"}),
+        500,
+    )
 
 
 if __name__ == "__main__":

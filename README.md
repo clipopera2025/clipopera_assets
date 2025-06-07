@@ -341,3 +341,19 @@ export default function ClipOperaVideoPreview() {
 ```
 
 Use it within your React/Next.js project to render an interactive preview panel for ClipOpera media.
+
+## 🤖 Discord Bot
+
+Use the `discord_bot.py` script to send MidJourney prompts in a channel. Set `DISCORD_BOT_TOKEN` in `.env` and run:
+
+```bash
+python discord_bot.py
+```
+
+Send prompts programmatically through Flask:
+
+```bash
+curl -X POST http://localhost:5000/send-prompt \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "a cyberpunk city skyline"}'
+```

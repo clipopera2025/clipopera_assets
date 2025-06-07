@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify
 import os
+import requests
 
 app = Flask(__name__)
+
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
 
 @app.route("/run-script", methods=["POST"])
@@ -21,6 +24,22 @@ def run_script():
     )
     os.system(cmd)
     return jsonify({"status": "Triggered full stack script."})
+
+
+@app.route("/send-prompt", methods=["POST"])
+def send_prompt():
+    if not DISCORD_WEBHOOK_URL:
+        return jsonify({"error": "DISCORD_WEBHOOK_URL not configured"}), 500
+    data = request.json
+    prompt = data.get("prompt")
+    if not prompt:
+        return jsonify({"error": "Missing prompt"}), 400
+    resp = requests.post(
+        DISCORD_WEBHOOK_URL, json={"content": f"/imagine prompt: {prompt}"}
+    )
+    if resp.status_code >= 400:
+        return jsonify({"error": "Failed to send to Discord"}), 500
+    return jsonify({"status": "Prompt sent"})
 
 
 if __name__ == "__main__":

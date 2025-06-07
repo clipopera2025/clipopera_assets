@@ -22,6 +22,7 @@ pip install \
     google-auth-httplib2 \
     google-auth-oauthlib \
     openai \
-    requests
+    requests \
+    discord.py
 
 echo "✅ Environment ready. You can now run create_notion_page.py"

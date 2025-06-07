@@ -1,0 +1,18 @@
+{
+  "name": "clipopera_assets",
+  "version": "1.0.0",
+  "description": "This repository contains 3D assets used by the ClipOpera project.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  }
+}

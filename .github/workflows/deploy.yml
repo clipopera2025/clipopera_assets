@@ -1,4 +1,4 @@
-name: Deploy to Render
+name: Deploy to Render and Vercel
 
 on:
   push:
@@ -29,3 +29,11 @@ jobs:
     - name: Deploy to Render (example webhook)
       run: |
         curl -X POST https://api.render.com/deploy/srv-<service-id>?key=<deploy-key>
+
+    - name: Deploy to Vercel
+      uses: amondnet/vercel-action@v20
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        vercel-args: '--prod'

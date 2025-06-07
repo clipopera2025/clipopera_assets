@@ -346,14 +346,23 @@ git push origin v1.0.0
 
 ### GitHub Actions
 
-A workflow at `.github/workflows/deploy.yml` installs dependencies, checks the code with `black`, compiles the scripts, and then calls a Render deploy webhook when changes are pushed to `main`.
+A workflow at `.github/workflows/deploy.yml` installs dependencies, checks the code with `black`, compiles the scripts, and then triggers deployments to Render and Vercel when changes are pushed to `main`. Set `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` as GitHub secrets so the workflow can deploy to Vercel.
 
 ### Cloud Deployment
 
 - **Render:** create a new Docker service from this repository and expose port `5000`.
 - **Railway:** import the repo and set `python app.py` as the start command.
+- **Vercel:** import the GitHub repository in the Vercel dashboard and choose **Other** as the framework preset. Set the root directory to the repository root and leave the build command empty to deploy the Dockerfile. After linking, every push to `main` automatically triggers a deploy.
 
 Automation templates built in Zapier or Make.com can be exported as `.zap` or scenario files and included in releases if desired.
+
+## 🌐 Linking GitHub to Vercel
+
+1. Sign in to [Vercel](https://vercel.com) and click **New Project**.
+2. Import this repository from GitHub.
+3. Choose **Other** for the framework preset so Vercel respects the `Dockerfile`.
+4. Leave the build command blank and make sure the root directory is the repository root.
+5. Once linked, pushes to the `main` branch trigger automatic deployments.
 
 ## 🎛️ React Preview Component
 

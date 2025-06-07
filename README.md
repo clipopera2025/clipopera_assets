@@ -149,6 +149,22 @@ python clipopera_full_stack.py \
   --sora
 ```
 
+### 📑 Batch Upload Script
+
+To add several projects at once, create a JSON Lines file and run `batch_upload.py`:
+
+```json
+{"project": "Do You See", "status": "In Progress", "link": "https://clipopera.com/do-you-see", "budget": 1200}
+{"project": "Mind Surfing", "status": "In Queue", "link": "https://clipopera.com/mind-surfing", "budget": 800}
+```
+
+Process the file:
+
+```bash
+python batch_upload.py projects.jsonl
+```
+
+
 
 ---
 

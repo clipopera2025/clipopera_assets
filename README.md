@@ -25,3 +25,27 @@ python send_to_notion.py Fashion_Alchemist_Chat_2025-06-07.md "Fashion Alchemist
 ```
 
 The script creates a new child page containing the chat log.
+
+### Batch upload to a Notion database
+
+1. In Notion create a database (table view recommended) with these properties:
+
+   | Property | Type | Description |
+   | --- | --- | --- |
+   | Name | Title | Automatically filled with the Markdown filename. |
+   | Tags | Multi-select | Populated from **Tags:** in the `.md` file. |
+   | Topics | Multi-select | Populated from **Topics:** in the `.md` file. |
+   | Quote | Text | Extracted from the `### Quote` block. |
+
+2. Copy the database link and extract the 32‑character ID.
+
+Set environment variables and run the batch uploader:
+
+```bash
+export NOTION_TOKEN="<your integration token>"
+export NOTION_PAGE_ID="<database id>"
+python notion_batch_uploader.py
+```
+
+The script scans Markdown files in the current directory and uploads each one as
+a new page in the database using the properties above.

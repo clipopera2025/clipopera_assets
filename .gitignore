@@ -1,0 +1,10 @@
+# Ignore virtual environments
+env/
+__pycache__/
+*.pyc
+
+# Node modules
+node_modules/
+
+# Binary artifacts generated during build
+# (3D assets in the repository are tracked)

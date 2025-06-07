@@ -391,3 +391,21 @@ curl -X POST http://localhost:5000/send-prompt \
   -H "Content-Type: application/json" \
   -d '{"prompt": "a cyberpunk city skyline"}'
 ```
+
+## 🔄 Squarespace to Shopify Migration
+
+If you are moving an existing store from Squarespace to Shopify, you can convert a Squarespace product export (CSV) and create matching products in Shopify automatically.
+
+1. Export your products from Squarespace as a CSV file.
+2. Set these variables in `.env`:
+   - `SHOPIFY_STORE` – yourstore.myshopify.com
+   - `SHOPIFY_API_KEY` – private app API key
+   - `SHOPIFY_API_PASSWORD` – private app password
+3. Run the migration script:
+
+```bash
+python squarespace_to_shopify.py squarespace_products.csv
+```
+
+Each row will be sent to the Shopify API as a new product. The script uses basic fields like name, description, price, and SKU.
+

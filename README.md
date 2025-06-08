@@ -12,7 +12,7 @@ This repository hosts the demo assets and HTML for **ClipOpera: The Gotham Ad En
    ```
 3. To lint the HTML, run:
    ```bash
-   npx -y htmlhint 'docs/**/*.html'
+   npx -y htmlhint 'docs/*.html'
    ```
    A GitHub Actions workflow will also run this automatically on pushes and pull requests.
 

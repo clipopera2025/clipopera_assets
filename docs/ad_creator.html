@@ -1,0 +1,168 @@
+<!-- CLIPOPERA 3D AD PLATFORM - REBUILT FOR IMAGE, VIDEO, AND 3D DEPLOYMENT -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClipOpera 3D Ad Creator</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #000;
+      font-family: 'Courier New', monospace;
+      color: #33FF66;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #editor, #preview {
+      margin: 1em;
+      background: rgba(0,0,0,0.85);
+      padding: 1em;
+      border: 1px solid #33FF66;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 800px;
+    }
+    #editor input, #editor select, #editor button, #editor textarea {
+      width: 100%;
+      margin: 0.5em 0;
+      padding: 0.5em;
+      background: #000;
+      color: #33FF66;
+      border: 1px solid #33FF66;
+      font-family: inherit;
+    }
+    #image-preview, #video-preview {
+      width: 100%;
+      max-height: 360px;
+      object-fit: contain;
+      background: #111;
+      border: 1px solid #33FF66;
+      margin-top: 1em;
+    }
+    #preview canvas {
+      border: 1px solid #33FF66;
+    }
+  </style>
+</head>
+<body>
+<div id="editor">
+  <h2>🎬 ClipOpera Ad Builder</h2>
+  <input type="text" id="adTitle" placeholder="Ad Title" value="CLIPOPERA 3D">
+  <textarea id="adScript" rows="4" placeholder="Ad Script">ClipOpera brings your ideas to life. Cinematic. Fast. 3D Ready.</textarea>
+  <label>Upload Background Image (JPG/PNG)</label>
+  <input type="file" id="bgImage" accept="image/*">
+  <img id="image-preview" hidden>
+
+  <label>Upload MP4 Video Clip (Optional)</label>
+  <input type="file" id="videoFile" accept="video/mp4">
+  <video id="video-preview" controls hidden></video>
+
+  <label>Voice Style</label>
+  <select id="voice-selector"></select>
+
+  <button onclick="renderPreview()">🎞️ Render Ad Preview</button>
+  <button onclick="exportAd()">💾 Export as Video Frame (Image)</button>
+</div>
+
+<div id="preview">
+  <h3>Preview Area (Canvas)</h3>
+  <canvas id="adCanvas" width="1080" height="1920"></canvas>
+</div>
+
+<script>
+let voices = [];
+const bgImage = document.getElementById('bgImage');
+const imagePreview = document.getElementById('image-preview');
+const videoFile = document.getElementById('videoFile');
+const videoPreview = document.getElementById('video-preview');
+const canvas = document.getElementById('adCanvas');
+const ctx = canvas.getContext('2d');
+
+bgImage.onchange = () => {
+  const file = bgImage.files[0];
+  if (file) {
+    const url = URL.createObjectURL(file);
+    imagePreview.src = url;
+    imagePreview.hidden = false;
+  }
+};
+
+videoFile.onchange = () => {
+  const file = videoFile.files[0];
+  if (file) {
+    const url = URL.createObjectURL(file);
+    videoPreview.src = url;
+    videoPreview.hidden = false;
+  }
+};
+
+function populateVoices() {
+  voices = speechSynthesis.getVoices();
+  const selector = document.getElementById('voice-selector');
+  selector.innerHTML = '';
+  voices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${v.name} (${v.lang})`;
+    selector.appendChild(opt);
+  });
+}
+speechSynthesis.onvoiceschanged = populateVoices;
+
+function renderPreview() {
+  const title = document.getElementById('adTitle').value;
+  const script = document.getElementById('adScript').value;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const img = new Image();
+  if (!imagePreview.hidden) {
+    img.src = imagePreview.src;
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      drawOverlay(title, script);
+    };
+  } else {
+    drawOverlay(title, script);
+  }
+}
+
+function drawOverlay(title, script) {
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(0, canvas.height - 400, canvas.width, 400);
+  ctx.fillStyle = '#33FF66';
+  ctx.font = 'bold 60px Courier New';
+  ctx.fillText(title, 50, canvas.height - 330);
+  ctx.font = '32px Courier New';
+  wrapText(ctx, script, 50, canvas.height - 260, canvas.width - 100, 40);
+}
+
+function wrapText(context, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    const metrics = context.measureText(testLine);
+    if (metrics.width > maxWidth) {
+      context.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  context.fillText(line, x, y);
+}
+
+function exportAd() {
+  const link = document.createElement('a');
+  link.download = 'clipopera_frame.png';
+  link.href = canvas.toDataURL();
+  link.click();
+}
+</script>
+</body>
+</html>

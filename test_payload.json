@@ -1,0 +1,11 @@
+{
+  "project": "Mind Surfing",
+  "status": "In Queue",
+  "link": "https://clipopera.com/mind-surfing",
+  "budget": 800,
+  "drive": "https://drive.google.com/drive/folders/mind-surfing",
+  "webmaster": "GPT-Webmaster",
+  "codex": "PenAI Assistant",
+  "gpts": "clipbot_id,kushite_style",
+  "sora": true
+}

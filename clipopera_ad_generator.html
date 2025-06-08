@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClipOpera Ad Generator</title>
+  <style>
+    body { background: black; color: lime; font-family: monospace; text-align: center; }
+    canvas { display: block; margin: 10px auto; border: 2px solid lime; }
+    #controls { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>🎞️ ClipOpera Ad Generator</h1>
+
+  <canvas id="previewCanvas" width="300" height="480"></canvas>
+
+  <div id="controls">
+    <select id="fitMode">
+      <option value="contain">Contain</option>
+      <option value="cover">Cover</option>
+    </select>
+    <button onclick="exportGIF()">🖼️ Export GIF</button>
+    <button onclick="exportMP4()">🎥 Export MP4</button>
+    <input type="file" id="upload" accept="image/*,video/*" />
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+  <script>
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    const upload = document.getElementById('upload');
+    let mediaElement;
+
+    function fitMedia(media) {
+      const mode = document.getElementById('fitMode').value;
+      const { width, height } = media.videoWidth ? { width: media.videoWidth, height: media.videoHeight } : media;
+      const srcAspect = width / height;
+      const canvasAspect = canvas.width / canvas.height;
+      let drawW, drawH, x, y;
+      if (mode === 'cover' ? srcAspect < canvasAspect : srcAspect > canvasAspect) {
+        drawH = canvas.height;
+        drawW = drawH * srcAspect;
+      } else {
+        drawW = canvas.width;
+        drawH = drawW / srcAspect;
+      }
+      x = (canvas.width - drawW) / 2;
+      y = (canvas.height - drawH) / 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(media, x, y, drawW, drawH);
+    }
+
+    upload.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const isVideo = file.type.startsWith('video');
+      mediaElement = document.createElement(isVideo ? 'video' : 'img');
+      mediaElement.crossOrigin = 'anonymous';
+      mediaElement.src = url;
+      if (isVideo) {
+        mediaElement.onloadeddata = () => {
+          mediaElement.currentTime = 0;
+          mediaElement.play();
+          setInterval(() => fitMedia(mediaElement), 1000);
+        };
+      } else {
+        mediaElement.onload = () => fitMedia(mediaElement);
+      }
+    });
+
+    function exportGIF() {
+      if (!mediaElement) return;
+      const gif = new GIF({ workers: 2, quality: 10, width: canvas.width, height: canvas.height });
+      let frameCount = 10;
+      for (let i = 0; i < frameCount; i++) {
+        fitMedia(mediaElement);
+        gif.addFrame(ctx, { copy: true, delay: 100 });
+      }
+      gif.on('finished', blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'clipopera.gif';
+        link.click();
+      });
+      gif.render();
+    }
+
+    async function exportMP4() {
+      if (!mediaElement || !mediaElement.videoWidth) return;
+      const { createFFmpeg, fetchFile } = FFmpeg;
+      const ffmpeg = createFFmpeg({ log: true });
+      await ffmpeg.load();
+
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      let frameNames = [];
+
+      for (let i = 0; i < 10; i++) {
+        fitMedia(mediaElement);
+        tempCtx.drawImage(canvas, 0, 0);
+        const blob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/png'));
+        const name = `frame${i}.png`;
+        ffmpeg.FS('writeFile', name, await fetchFile(blob));
+        frameNames.push(name);
+      }
+
+      await ffmpeg.run('-framerate', '1', '-i', 'frame%d.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', 'output.mp4');
+      const data = ffmpeg.FS('readFile', 'output.mp4');
+      const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
+      const url = URL.createObjectURL(videoBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'clipopera.mp4';
+      link.click();
+    }
+  </script>
+</body>
+</html>

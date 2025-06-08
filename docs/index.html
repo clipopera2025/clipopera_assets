@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipOpera Demo</title>
+<style>
+#processingCanvas,#captureCanvas{display:none;}
+#controls{margin-top:10px;}
+#template-select{margin-right:5px;}
+#ad-media{transition:opacity .5s;}
+</style>
+</head>
+<body>
+<canvas id="processingCanvas"></canvas>
+<canvas id="captureCanvas" width="1080" height="1920"></canvas>
+<img id="ad-media" width="512" height="800" alt="ad media" />
+<div id="controls">
+  <select id="template-select"></select>
+  <button id="apply-template">Apply Template</button>
+</div>
+<script>
+const PX_SIZE_MAP = { high: 2, medium: 4, low: 8 };
+const processingCanvas = document.getElementById('processingCanvas');
+const captureCanvas = document.getElementById('captureCanvas');
+let uploadedAudio = {};
+
+function hexToRgb(hex) {
+  const bigint = parseInt(hex.slice(1), 16);
+  return {
+    r: (bigint >> 16) & 255,
+    g: (bigint >> 8) & 255,
+    b: bigint & 255
+  };
+}
+
+function drawRetroFilteredContent(ctx, source, width, height, quality, mode) {
+  ctx.clearRect(0, 0, width, height);
+  ctx.imageSmoothingEnabled = false;
+  const pixelSize = PX_SIZE_MAP[quality] || PX_SIZE_MAP.medium;
+
+  const sourceW = source.videoWidth || source.naturalWidth || source.width;
+  const sourceH = source.videoHeight || source.naturalHeight || source.height;
+
+  const targetRatio = width / height;
+  const sourceRatio = sourceW / sourceH;
+
+  let drawW;
+  let drawH;
+  let offsetX = 0;
+  let offsetY = 0;
+  if (sourceRatio > targetRatio) {
+    drawH = height;
+    drawW = height * sourceRatio;
+    offsetX = (width - drawW) / 2;
+  } else {
+    drawW = width;
+    drawH = width / sourceRatio;
+    offsetY = (height - drawH) / 2;
+  }
+
+  if (mode === 'full_color' && quality === 'high') {
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(source, offsetX, offsetY, drawW, drawH);
+    return;
+  }
+
+  const virtualCanvas = document.createElement('canvas');
+  virtualCanvas.width = Math.ceil(drawW / pixelSize);
+  virtualCanvas.height = Math.ceil(drawH / pixelSize);
+  const vctx = virtualCanvas.getContext('2d');
+  vctx.imageSmoothingEnabled = false;
+  vctx.drawImage(source, 0, 0, virtualCanvas.width, virtualCanvas.height);
+  ctx.drawImage(virtualCanvas, offsetX, offsetY, drawW, drawH);
+
+  if (mode === 'retro' || mode === 'pixelated_only') {
+    const primary = '#33FF66';
+    const color = hexToRgb(primary);
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const avg = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      if (mode === 'retro') {
+        data[i] = avg * (color.r / 255);
+        data[i + 1] = avg * (color.g / 255);
+        data[i + 2] = avg * (color.b / 255);
+      } else {
+        data[i] = data[i + 1] = data[i + 2] = avg;
+      }
+      if (mode === 'retro' && ((i / 4) % height) % 4 === 0) {
+        data[i] = Math.max(0, data[i] - 30);
+        data[i + 1] = Math.max(0, data[i + 1] - 30);
+        data[i + 2] = Math.max(0, data[i + 2] - 30);
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+}
+
+let templates = [];
+const adImg = document.getElementById('ad-media');
+const templateSelect = document.getElementById('template-select');
+
+fetch('templates.json')
+  .then(r => r.json())
+  .then(data => {
+    templates = data;
+    templates.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.name;
+      opt.textContent = t.title;
+      templateSelect.appendChild(opt);
+    });
+  });
+
+async function loadVoice(url) {
+  if (!url) return;
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const res = await fetch(url);
+  const buf = await res.arrayBuffer();
+  const audio = await ctx.decodeAudioData(buf);
+  uploadedAudio = { file: null, audioBuffer: audio };
+}
+
+async function applyTemplate(name) {
+  const t = templates.find(x => x.name === name);
+  if (!t) return;
+  document.title = t.title;
+  await loadVoice(t.voice);
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const ctx = processingCanvas.getContext('2d');
+    processingCanvas.width = 1020;
+    processingCanvas.height = 1600;
+    drawRetroFilteredContent(ctx, img, 1020, 1600, 'medium', 'retro');
+    adImg.style.opacity = 0;
+    setTimeout(() => {
+      adImg.src = processingCanvas.toDataURL('image/png');
+      adImg.style.opacity = 1;
+    }, 200);
+  };
+  img.src = t.media;
+}
+
+document.getElementById('apply-template').addEventListener('click', () => {
+  applyTemplate(templateSelect.value);
+});
+</script>
+</body>
+</html>

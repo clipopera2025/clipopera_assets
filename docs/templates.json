@@ -1,0 +1,20 @@
+[
+  {
+    "name": "neon_city",
+    "title": "NEON CITY",
+    "subtitle": "Shine in Retro Lights",
+    "tagline": "ClipOpera - Where Pixels Meet Neon",
+    "media": "https://placehold.co/1020x1600.png?text=Neon+City",
+    "voice": "https://www.soundjay.com/human/sounds/applause-8.mp3",
+    "transition": "fade"
+  },
+  {
+    "name": "retro_wave",
+    "title": "RETRO WAVE",
+    "subtitle": "Ride The Electric Tide",
+    "tagline": "Synth Beats & Pixel Heat",
+    "media": "https://placehold.co/1020x1600.png?text=Retro+Wave",
+    "voice": "https://www.soundjay.com/human/sounds/cheering-3.mp3",
+    "transition": "fade"
+  }
+]

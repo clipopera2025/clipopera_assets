@@ -6,13 +6,24 @@
 <title>ClipOpera Demo</title>
 <style>
 #processingCanvas,#captureCanvas{display:none;}
+#controls{margin-top:10px;}
+#template-select{margin-right:5px;}
+#ad-media{transition:opacity .5s;}
 </style>
 </head>
 <body>
 <canvas id="processingCanvas"></canvas>
 <canvas id="captureCanvas" width="1080" height="1920"></canvas>
+<img id="ad-media" width="512" height="800" alt="ad media" />
+<div id="controls">
+  <select id="template-select"></select>
+  <button id="apply-template">Apply Template</button>
+</div>
 <script>
 const PX_SIZE_MAP = { high: 2, medium: 4, low: 8 };
+const processingCanvas = document.getElementById('processingCanvas');
+const captureCanvas = document.getElementById('captureCanvas');
+let uploadedAudio = {};
 
 function hexToRgb(hex) {
   const bigint = parseInt(hex.slice(1), 16);
@@ -88,6 +99,56 @@ function drawRetroFilteredContent(ctx, source, width, height, quality, mode) {
     ctx.putImageData(imgData, 0, 0);
   }
 }
+
+let templates = [];
+const adImg = document.getElementById('ad-media');
+const templateSelect = document.getElementById('template-select');
+
+fetch('templates.json')
+  .then(r => r.json())
+  .then(data => {
+    templates = data;
+    templates.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.name;
+      opt.textContent = t.title;
+      templateSelect.appendChild(opt);
+    });
+  });
+
+async function loadVoice(url) {
+  if (!url) return;
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const res = await fetch(url);
+  const buf = await res.arrayBuffer();
+  const audio = await ctx.decodeAudioData(buf);
+  uploadedAudio = { file: null, audioBuffer: audio };
+}
+
+async function applyTemplate(name) {
+  const t = templates.find(x => x.name === name);
+  if (!t) return;
+  document.title = t.title;
+  await loadVoice(t.voice);
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const ctx = processingCanvas.getContext('2d');
+    processingCanvas.width = 1020;
+    processingCanvas.height = 1600;
+    drawRetroFilteredContent(ctx, img, 1020, 1600, 'medium', 'retro');
+    adImg.style.opacity = 0;
+    setTimeout(() => {
+      adImg.src = processingCanvas.toDataURL('image/png');
+      adImg.style.opacity = 1;
+    }, 200);
+  };
+  img.src = t.media;
+}
+
+document.getElementById('apply-template').addEventListener('click', () => {
+  applyTemplate(templateSelect.value);
+});
 </script>
 </body>
 </html>

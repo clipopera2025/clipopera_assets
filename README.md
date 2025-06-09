@@ -34,3 +34,64 @@ The script will query the Notion database for entries where the `Status` propert
 ## ClipOpera Ad Generator
 
 `clipopera_ad_generator.html` is a simple in-browser tool for previewing images or videos and exporting a short GIF or MP4. Open the file in your browser, choose a fit mode, upload media, then export the result.
+
+## FastAPI Ad Generation API
+
+The `main.py` application exposes endpoints for generating ad copy, images and videos.
+
+### Setup
+
+1. Install Python dependencies (includes `httpx` and `tenacity` for robust requests):
+   ```bash
+   pip install -r requirements.txt
+   # ffmpeg is required for video generation
+   # e.g. on Ubuntu: sudo apt-get install ffmpeg
+   # Redis is required for Celery task queues
+   # e.g. on Ubuntu: sudo apt-get install redis-server
+   ```
+2. Configure a `.env` file with the following variables:
+   ```ini
+   GEMINI_API_KEY=<google_api_key>
+   OPENAI_API_KEY=<openai_api_key>
+   AWS_ACCESS_KEY_ID=<aws_access_key>
+   AWS_SECRET_ACCESS_KEY=<aws_secret_key>
+   AWS_REGION=<aws_region>
+   S3_BUCKET_NAME=<your_s3_bucket>
+   META_APP_ID=<meta_app_id>
+   META_APP_SECRET=<meta_app_secret>
+   META_REDIRECT_URI=<https://yourdomain.com/meta/callback>
+   CELERY_BROKER_URL=redis://localhost:6379/0
+   ```
+   These variables are loaded at runtime using `python-dotenv`.
+
+### Running
+
+Launch the server with Uvicorn:
+
+```bash
+uvicorn main:app --reload
+```
+
+Visit `http://localhost:8000/docs` for interactive Swagger docs.
+
+The image endpoint accepts a `quality` field (`standard` or `hd`) controlling
+the fidelity and cost of DALL-E generation.
+
+To process requests, run a Celery worker in a separate terminal:
+
+```bash
+celery -A celery_worker.celery_app worker --loglevel=info
+```
+
+The API exposes several endpoints. Video and Meta ad creation run asynchronously and return a `task_id` which can be polled via `/api/v1/tasks/{task_id}`:
+
+* `POST /api/v1/generate/ad_copy` – generate marketing copy
+* `POST /api/v1/generate/image` – create an image via DALL‑E 3 and return an S3 URL
+* `POST /api/v1/upload` – upload a user file to S3 and return a URL
+* `POST /api/v1/generate/video` – assemble short videos from scenes
+* `GET /api/v1/platforms/meta/auth_start` – begin Meta OAuth flow
+* `GET /api/v1/platforms/meta/oauth_callback` – handle Meta redirect
+* `POST /api/v1/platforms/meta/upload/image` – upload an image to Meta Ads
+* `POST /api/v1/platforms/meta/upload/video` – upload a video to Meta Ads
+* `POST /api/v1/platforms/meta/create_ad` – create a basic ad campaign and ad
+* `GET /api/v1/tasks/{task_id}` – fetch task status and result

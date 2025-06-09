@@ -22,9 +22,6 @@ from facebook_business.api import FacebookAdsApi
 from facebook_business.adobjects.adimage import AdImage
 from facebook_business.adobjects.advideo import AdVideo
 
-from celery_worker import generate_video_task, create_meta_ad_task
-
-
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)

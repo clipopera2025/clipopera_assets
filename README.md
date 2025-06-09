@@ -34,3 +34,30 @@ The script will query the Notion database for entries where the `Status` propert
 ## ClipOpera Ad Generator
 
 `clipopera_ad_generator.html` is a simple in-browser tool for previewing images or videos and exporting a short GIF or MP4. Open the file in your browser, choose a fit mode, upload media, then export the result.
+
+## Drive Chat Uploader
+
+`drive_chat_uploader.py` uploads Markdown chat archives from a local `chats/` folder to Google Drive. Each file is summarized using OpenAI before upload.
+
+### Setup
+
+1. Install the Python dependencies:
+   ```bash
+   pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib openai
+   ```
+2. Place `credentials.json` next to the script and ensure a `chats/` directory exists with your `.md` archives.
+
+### Running the Script
+
+Export your OpenAI API key or provide it via `--openai-key`:
+
+```bash
+# Using environment variable
+export OPENAI_API_KEY=<your-key>
+python drive_chat_uploader.py --folder-id <GOOGLE_DRIVE_FOLDER_ID>
+
+# Or passing the key directly
+python drive_chat_uploader.py --folder-id <GOOGLE_DRIVE_FOLDER_ID> --openai-key <your-key>
+```
+
+On first run, a browser window will prompt for Google Drive authentication. Tokens are saved to `token.json` for subsequent runs.

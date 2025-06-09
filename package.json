@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"No tests yet. Coming soon.\" && exit 0"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -15,5 +15,8 @@
     "@notionhq/client": "^3.1.3",
     "dotenv": "^16.5.0",
     "googleapis": "^150.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.6.2"
   }
 }

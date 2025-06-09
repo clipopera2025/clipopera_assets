@@ -90,7 +90,16 @@ async function run() {
   }
 }
 
-run().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+module.exports = {
+  fetchNotionEntries,
+  sendToDiscord,
+  uploadToDrive,
+  run,
+};
+
+if (require.main === module) {
+  run().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
+}

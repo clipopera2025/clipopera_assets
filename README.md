@@ -33,7 +33,7 @@ The script will query the Notion database for entries where the `Status` propert
 
 ## ClipOpera Ad Generator
 
-`clipopera_ad_generator.html` is a simple in-browser tool for previewing images or videos and exporting a short GIF or MP4. Open the file in your browser, choose a fit mode, upload media, then export the result.
+`public/index.html` is a simple in-browser tool for previewing images or videos and exporting a short GIF or MP4. Open the file in your browser, choose a fit mode, upload media, then export the result. Sample assets live under `public/media/`.
 
 ## Drive Chat Uploader
 

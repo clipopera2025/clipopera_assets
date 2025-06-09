@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"No tests yet. Coming soon.\" && exit 0"
+    "test": "echo \"No tests yet. Coming soon.\" && exit 0",
+    "deploy": "gh-pages -d public"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +15,8 @@
     "@googleapis/drive": "^13.0.1",
     "@notionhq/client": "^3.1.3",
     "dotenv": "^16.5.0",
+    "gh-pages": "^6.3.0",
     "googleapis": "^150.0.1"
-  }
+  },
+  "homepage": "https://ClipOpera.github.io/clipopera_assets"
 }

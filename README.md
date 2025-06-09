@@ -34,3 +34,7 @@ The script will query the Notion database for entries where the `Status` propert
 ## ClipOpera Ad Generator
 
 `clipopera_ad_generator.html` is a simple in-browser tool for previewing images or videos and exporting a short GIF or MP4. Open the file in your browser, choose a fit mode, upload media, then export the result.
+## ClipOpera Neon Generator
+
+`index.html` loads `clipopera.js` and `style.css` to provide a neon-styled media preview tool. Upload an image or video, adjust the fit mode, and export a short GIF or MP4 right in the browser. Everything runs client-side with GIF.js and FFmpeg.wasm.
+

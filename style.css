@@ -1,0 +1,41 @@
+body {
+  background: black;
+  color: #39ff14; /* neon green */
+  font-family: monospace;
+  text-align: center;
+  margin: 0;
+  padding: 2em;
+}
+
+h1 {
+  text-shadow: 0 0 8px #39ff14, 0 0 16px #39ff14;
+  margin-bottom: 1em;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto 1em;
+  border: 2px solid #39ff14;
+}
+
+#controls {
+  margin-top: 1em;
+}
+
+button {
+  background: transparent;
+  border: 2px solid #39ff14;
+  color: #39ff14;
+  padding: 0.5em 1em;
+  margin: 0 0.5em;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+select, input[type="file"] {
+  background: transparent;
+  border: 2px solid #39ff14;
+  color: #39ff14;
+  padding: 0.5em;
+  margin: 0 0.5em;
+}

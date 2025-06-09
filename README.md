@@ -31,6 +31,6 @@ node scripts/notion_to_discord.js
 
 The script will query the Notion database for entries where the `Status` property equals `New`, send the contents to Discord, and upload any attached file to Google Drive if a folder ID is provided.
 
-## ClipOpera Ad Generator
+## ClipOpera Neon Generator
 
-`clipopera_ad_generator.html` is a simple in-browser tool for previewing images or videos and exporting a short GIF or MP4. Open the file in your browser, choose a fit mode, upload media, then export the result.
+`clipopera_ad_generator.html` is a browser based "Neon" generator. It lets you upload an image and optional audio track, add overlay text, pick a fit mode, and instantly preview the result. You can export the composition as an animated GIF or an MP4 video. Buttons demonstrate how a generated clip could be sent to Notion, Discord, or Google Drive (you must provide your own API credentials to enable those uploads).

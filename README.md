@@ -117,3 +117,18 @@ The API exposes several endpoints. Video and Meta ad creation run asynchronously
 * `GET /meta-status` – check if the current user linked a Meta account
 * `POST /upload-model` – upload a 3D model file (authenticated)
 * `GET /models` – list uploaded model URLs (authenticated)
+
+### Demo React Frontend
+
+The `frontend` directory contains a simple React app showcasing how to interact
+with the API. It supports logging in, uploading 3D models and linking a Meta
+account. To run the demo:
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+The app is intentionally minimal and meant only as an example of integrating the
+ClipOpera API into a frontend project.

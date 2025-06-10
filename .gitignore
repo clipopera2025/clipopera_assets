@@ -1,3 +1,31 @@
-node_modules/
-.env
-__pycache__/
+# Gitignore for ClipOpera AI Ad Studio
+
+# --- Project Specific ---
+.env               # Environment variables (crucial for secrets!)
+__pycache__/       # Python cache directories
+*.pyc              # Compiled Python files
+.pytest_cache/     # Pytest cache
+
+# --- Node.js/Frontend ---
+node_modules/      # Node.js dependencies
+build/             # React build output (if using create-react-app/similar)
+.next/             # Next.js build output (if using Next.js)
+dist/              # Vite/other bundler build output
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+.parcel-cache/
+.vscode/
+
+# --- Python/Backend ---
+.venv/
+venv/
+*.log
+*.sqlite3
+
+# --- Operating System Specific ---
+.DS_Store
+Thumbs.db
+Desktop.ini

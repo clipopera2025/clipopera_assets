@@ -155,3 +155,16 @@ The template dropdown now includes anime cartoon presets (10, 30 and 60 second a
 
 A `/health` endpoint returns `{ "status": "ok" }` for uptime monitoring.
 Run `curl http://localhost:8000/health` to check.
+
+## Node.js Upload & Meta OAuth Demo
+
+This repo includes a small Express server (`server.js`) demonstrating file uploads to AWS S3 and a basic Meta OAuth flow.
+
+Install dependencies and run:
+
+```bash
+npm install
+npm run start-server
+```
+
+Then visit `http://localhost:3000` to try uploading a file or initiating Meta login.

@@ -14,6 +14,9 @@ const VIDEO_TEMPLATES = [
   { id: 'fast_paced', name: 'Fast Paced' },
   { id: 'luxury_showcase', name: 'Luxury Showcase' },
   { id: 'explainer', name: 'Explainer Video' },
+  { id: 'anime_10s', name: 'Anime Cartoon (10s)' },
+  { id: 'anime_30s', name: 'Anime Cartoon (30s)' },
+  { id: 'anime_60s', name: 'Anime Cartoon (60s)' },
 ];
 
 function GLTFModel({ url }) {

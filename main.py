@@ -185,6 +185,7 @@ class VideoInput(BaseModel):
     width: int = 720
     height: int = 1280
     fps: int = 30
+    template_id: str = "standard"
 
 class VideoOutput(BaseModel):
     video_url: str

@@ -58,6 +58,27 @@ s3_client = boto3.client(
 
 retry_config = dict(stop=stop_after_attempt(3), wait=wait_fixed(2))
 
+# Mapping of video template IDs to settings like target duration and
+# optional placeholder video URLs used for the demo anime templates.
+VIDEO_TEMPLATE_CONFIGS = {
+    "standard": {"video_duration": 30},
+    "fast_paced": {"video_duration": 15},
+    "luxury_showcase": {"video_duration": 30},
+    "explainer": {"video_duration": 60},
+    "anime_10s": {
+        "video_duration": 10,
+        "placeholder_url": "https://example.com/anime_10s.mp4",
+    },
+    "anime_30s": {
+        "video_duration": 30,
+        "placeholder_url": "https://example.com/anime_30s.mp4",
+    },
+    "anime_60s": {
+        "video_duration": 60,
+        "placeholder_url": "https://example.com/anime_60s.mp4",
+    },
+}
+
 @retry(**retry_config)
 async def safe_get(url: str) -> httpx.Response:
     async with httpx.AsyncClient(timeout=10) as client:
@@ -87,6 +108,7 @@ class VideoInput(BaseModel):
     width: int = 720
     height: int = 1280
     fps: int = 30
+    template_id: str = "standard"
 
 class MetaAdInput(BaseModel):
     user_id: str
@@ -107,6 +129,11 @@ class MetaAdInput(BaseModel):
 
 
 async def generate_video_async(data: VideoInput) -> str:
+    cfg = VIDEO_TEMPLATE_CONFIGS.get(data.template_id, {})
+    placeholder = cfg.get("placeholder_url")
+    if placeholder:
+        return placeholder
+
     clips = []
     audio_clips = []
     temp_files = []
@@ -135,6 +162,13 @@ async def generate_video_async(data: VideoInput) -> str:
             audio_clips.append(audio)
         clips.append(comp)
     final_video = concatenate_videoclips(clips, method="compose")
+    target_duration = cfg.get("video_duration")
+    if target_duration:
+        if final_video.duration > target_duration:
+            final_video = final_video.subclip(0, target_duration)
+        elif final_video.duration < target_duration:
+            pad = ColorClip(size=(data.width, data.height), color=(0,0,0), duration=target_duration - final_video.duration)
+            final_video = concatenate_videoclips([final_video, pad], method="compose")
     if audio_clips:
         final_audio = concatenate_audioclips(audio_clips)
         final_video = final_video.set_audio(final_audio)

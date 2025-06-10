@@ -132,4 +132,4 @@ npm start
 
 The app is intentionally minimal and meant only as an example of integrating the
 ClipOpera API into a frontend project. The Button component used in the demo is exported as the default from `frontend/components/ui/button.js`, so import it without braces.
-The template dropdown now includes anime cartoon presets (10, 30 and 60 second ads) which currently output placeholder videos.
+The template dropdown now includes anime cartoon presets (10, 30 and 60 second ads) as well as experimental ASCII art and retro 8/16/32-bit styles. All of these currently output placeholder videos.

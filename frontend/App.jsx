@@ -17,6 +17,10 @@ const VIDEO_TEMPLATES = [
   { id: 'anime_10s', name: 'Anime Cartoon (10s)' },
   { id: 'anime_30s', name: 'Anime Cartoon (30s)' },
   { id: 'anime_60s', name: 'Anime Cartoon (60s)' },
+  { id: 'ascii_art_ad', name: 'ASCII Art Ad' },
+  { id: 'retro_8bit_ad', name: 'Retro 8-Bit Ad' },
+  { id: 'retro_16bit_ad', name: 'Retro 16-Bit Ad' },
+  { id: 'retro_32bit_ad', name: 'Retro 32-Bit Ad' },
 ];
 
 function GLTFModel({ url }) {

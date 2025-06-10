@@ -77,6 +77,22 @@ VIDEO_TEMPLATE_CONFIGS = {
         "video_duration": 60,
         "placeholder_url": "https://example.com/anime_60s.mp4",
     },
+    "ascii_art_ad": {
+        "video_duration": 30,
+        "placeholder_url": "https://example.com/ascii_art_ad.mp4",
+    },
+    "retro_8bit_ad": {
+        "video_duration": 30,
+        "placeholder_url": "https://example.com/retro_8bit_ad.mp4",
+    },
+    "retro_16bit_ad": {
+        "video_duration": 30,
+        "placeholder_url": "https://example.com/retro_16bit_ad.mp4",
+    },
+    "retro_32bit_ad": {
+        "video_duration": 30,
+        "placeholder_url": "https://example.com/retro_32bit_ad.mp4",
+    },
 }
 
 @retry(**retry_config)

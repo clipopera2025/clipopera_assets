@@ -158,13 +158,14 @@ Run `curl http://localhost:8000/health` to check.
 
 ## Node.js Upload & Meta OAuth Demo
 
-This repo includes a small Express server (`server.js`) demonstrating file uploads to AWS S3 and a basic Meta OAuth flow.
+This repo includes a small Express server located in `node_demo/` demonstrating file uploads to AWS S3 and a basic Meta OAuth flow.
 
 Install dependencies and run:
 
 ```bash
+cd node_demo
 npm install
-npm run start-server
+npm start
 ```
 
 Then visit `http://localhost:3000` to try uploading a file or initiating Meta login.

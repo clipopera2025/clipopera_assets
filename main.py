@@ -43,6 +43,9 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
 SECRET_KEY = os.getenv("SECRET_KEY", "change_me")
 DEMO_USERNAME = os.getenv("DEMO_USERNAME", "demo")
 DEMO_PASSWORD = os.getenv("DEMO_PASSWORD", "password")
+
+# simple in-memory user store for demo purposes
+USERS = {DEMO_USERNAME: DEMO_PASSWORD}
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -105,7 +108,7 @@ celery_app = Celery('worker', broker=CELERY_BROKER_URL, backend=CELERY_BROKER_UR
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def authenticate_user(username: str, password: str) -> bool:
-    return username == DEMO_USERNAME and password == DEMO_PASSWORD
+    return USERS.get(username) == password
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
@@ -122,7 +125,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
-        if username != DEMO_USERNAME:
+        if username not in USERS:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
@@ -166,6 +169,10 @@ class ImageOutput(BaseModel):
 class TaskStatus(BaseModel):
     task_id: str
 
+class RegisterInput(BaseModel):
+    username: str
+    password: str
+
 # Video generation schemas
 class VideoScene(BaseModel):
     image_url: Optional[str] = None
@@ -189,6 +196,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
     access_token = create_access_token({"sub": form_data.username})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/register")
+async def register(user: RegisterInput):
+    if user.username in USERS:
+        raise HTTPException(status_code=400, detail="User already exists")
+    USERS[user.username] = user.password
+    return {"message": "registered"}
 
 
 @app.post("/upload-model")
@@ -341,6 +356,11 @@ async def meta_oauth_callback(code: str, state: str):
     TOKEN_STORE[state] = token
     TOKEN_STORE[state + "_fbid"] = user_id_fb
     return {"meta_user_id": user_id_fb}
+
+
+@app.get("/meta-status")
+async def meta_status(current_user: str = Depends(get_current_user)):
+    return {"linked": current_user in TOKEN_STORE}
 
 
 @app.post("/api/v1/platforms/meta/upload/image")

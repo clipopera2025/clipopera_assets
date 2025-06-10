@@ -113,5 +113,7 @@ The API exposes several endpoints. Video and Meta ad creation run asynchronously
 * `POST /api/v1/platforms/meta/create_ad` – create a basic ad campaign and ad
 * `GET /api/v1/tasks/{task_id}` – fetch task status and result
 * `POST /token` – obtain a JWT access token
+* `POST /register` – create a new user account
+* `GET /meta-status` – check if the current user linked a Meta account
 * `POST /upload-model` – upload a 3D model file (authenticated)
 * `GET /models` – list uploaded model URLs (authenticated)

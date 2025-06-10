@@ -2,9 +2,9 @@ import React, { useRef, useState, useEffect, Suspense } from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
 import { OrbitControls, Stage, Html } from "@react-three/drei";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { Card, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { AudioLines, Loader2 } from "lucide-react";
+import { Card, CardContent } from "./components/ui/card";
+import { Button } from "./components/ui/button";
+import { AudioLines, Loader2, Link, LogIn, UserPlus } from "lucide-react";
 import jwtDecode from "jwt-decode";
 
 function GLTFModel({ url }) {
@@ -24,8 +24,13 @@ export default function App() {
   const [userModels, setUserModels] = useState([]);
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [registerUsername, setRegisterUsername] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
   const [logoutTimer, setLogoutTimer] = useState(null);
   const [lastActivity, setLastActivity] = useState(Date.now());
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+  const [metaAccountLinked, setMetaAccountLinked] = useState(false);
+  const timeoutWarningRef = useRef(null);
 
   const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8000";
   const audioRef = useRef(new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'));
@@ -38,6 +43,22 @@ export default function App() {
       audioRef.current.play();
     }
     setIsPlaying(!isPlaying);
+  };
+
+  const checkMetaAccountStatus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_API_URL}/meta-status`, {
+        headers: { Authorization: `Bearer ${userToken}` },
+      });
+      const data = await response.json();
+      setMetaAccountLinked(data.linked === true);
+    } catch (error) {
+      console.error("Error checking Meta account status:", error);
+    }
+  };
+
+  const startMetaOAuth = () => {
+    window.location.href = `${BACKEND_API_URL}/api/v1/platforms/meta/auth_start`;
   };
 
   const handleLogin = async () => {
@@ -58,9 +79,12 @@ export default function App() {
       const expiryTime = decoded.exp * 1000;
       const currentTime = Date.now();
       const timeout = expiryTime - currentTime;
+      if (timeoutWarningRef.current) clearTimeout(timeoutWarningRef.current);
+      timeoutWarningRef.current = setTimeout(() => setShowTimeoutWarning(true), timeout - 2 * 60 * 1000);
       const timer = setTimeout(() => handleLogout(), timeout);
       setLogoutTimer(timer);
       fetchUserModels();
+      checkMetaAccountStatus();
     } catch (error) {
       alert("Login failed: " + error.message);
     }
@@ -71,7 +95,23 @@ export default function App() {
     setUserToken("");
     setModelUrl(null);
     setUserModels([]);
+    setShowTimeoutWarning(false);
     if (logoutTimer) clearTimeout(logoutTimer);
+    if (timeoutWarningRef.current) clearTimeout(timeoutWarningRef.current);
+  };
+
+  const handleRegister = async () => {
+    try {
+      const response = await fetch(`${BACKEND_API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: registerUsername, password: registerPassword }),
+      });
+      if (!response.ok) throw new Error("Registration failed");
+      alert("Registration successful! Please log in.");
+    } catch (error) {
+      alert("Registration error: " + error.message);
+    }
   };
 
   const handleModelUpload = async (event) => {
@@ -149,28 +189,18 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-8 font-inter text-white relative">
-      {!userToken && (
-        <div className="absolute top-4 left-4 bg-gray-700 p-4 rounded-lg shadow-lg">
-          <input
-            type="text"
-            placeholder="Username"
-            value={loginUsername}
-            onChange={(e) => setLoginUsername(e.target.value)}
-            className="mb-2 p-2 w-full rounded bg-gray-800 text-white"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={loginPassword}
-            onChange={(e) => setLoginPassword(e.target.value)}
-            className="mb-2 p-2 w-full rounded bg-gray-800 text-white"
-          />
-          <Button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700">Login</Button>
+      {showTimeoutWarning && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70">
+          <div className="bg-gray-800 p-6 rounded-xl shadow-lg text-center animate-pulse">
+            <h2 className="text-lg font-bold mb-2 text-yellow-400">Session Expiring Soon</h2>
+            <p className="mb-4">You will be logged out in less than 2 minutes due to inactivity.</p>
+            <Button onClick={() => {
+              setShowTimeoutWarning(false);
+              setLastActivity(Date.now());
+              handleLogin();
+            }}>Stay Logged In</Button>
+          </div>
         </div>
-      )}
-
-      {userToken && (
-        <Button onClick={handleLogout} className="absolute top-4 left-4 bg-red-600 hover:bg-red-700">Logout</Button>
       )}
 
       <button onClick={togglePlay} className="absolute top-8 right-8 z-50 p-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl">
@@ -181,14 +211,41 @@ export default function App() {
         ClipOpera AI Ad Studio
       </h1>
 
+      {!userToken && (
+        <div className="mb-8 text-center space-y-4">
+          <div className="flex flex-col items-center gap-2">
+            <input type="text" placeholder="Username" value={loginUsername} onChange={(e) => setLoginUsername(e.target.value)} className="p-2 rounded bg-gray-800 text-white" />
+            <input type="password" placeholder="Password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="p-2 rounded bg-gray-800 text-white" />
+            <Button onClick={handleLogin} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"><LogIn size={16}/>Login</Button>
+          </div>
+          <div className="flex flex-col items-center gap-2 border-t border-gray-700 pt-4">
+            <input type="text" placeholder="New Username" value={registerUsername} onChange={(e) => setRegisterUsername(e.target.value)} className="p-2 rounded bg-gray-800 text-white" />
+            <input type="password" placeholder="New Password" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} className="p-2 rounded bg-gray-800 text-white" />
+            <Button onClick={handleRegister} className="bg-green-600 hover:bg-green-700 flex items-center gap-2"><UserPlus size={16}/>Register</Button>
+          </div>
+        </div>
+      )}
+
+      {userToken && (
+        <div className="absolute top-4 left-4 flex gap-2">
+          <Button onClick={handleLogout} className="bg-red-600 hover:bg-red-700">Logout</Button>
+          <Button onClick={startMetaOAuth} disabled={metaAccountLinked} className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2">
+            <Link size={16}/>{metaAccountLinked ? 'Meta Linked' : 'Link Meta'}
+          </Button>
+        </div>
+      )}
+
       {userToken && (
         <div className="mb-8 text-center">
           <input type="file" accept=".glb,.gltf,.zip,.fbx,.obj" onChange={handleModelUpload} className="mb-4" />
           {generatedAdStatus && <p className="text-sm text-gray-400">{generatedAdStatus}</p>}
-          <div className="flex flex-wrap justify-center gap-4 mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
             {userModels.map((model) => (
-              <Card key={model.id} className="w-48 cursor-pointer hover:shadow-lg" onClick={() => setModelUrl(model.url)}>
-                <CardContent className="p-2 text-sm text-center truncate">{model.name}</CardContent>
+              <Card key={model.id} className="bg-gray-900 border border-gray-700 hover:shadow-xl hover:border-purple-500 transition-all duration-300 cursor-pointer" onClick={() => setModelUrl(model.url)}>
+                <CardContent className="p-2 text-center truncate">
+                  <span className="block text-white font-semibold text-sm">{model.name}</span>
+                  <span className="text-xs text-purple-400">{new URL(model.url).hostname}</span>
+                </CardContent>
               </Card>
             ))}
           </div>

@@ -93,7 +93,7 @@ VIDEO_TEMPLATE_CONFIGS = {
     },
     "anime_10s": {
         "video_duration": 10,
-        "placeholder_url": "https://example.com/anime_10s.mp4",
+        "placeholder_url": os.getenv("ANIME_10S_PLACEHOLDER_URL", "https://example.com/anime_10s.mp4"),
         "model_intro_duration": 0,
         "outro_duration": 2,
         "text_fontsize": 55,
@@ -101,7 +101,7 @@ VIDEO_TEMPLATE_CONFIGS = {
     },
     "anime_30s": {
         "video_duration": 30,
-        "placeholder_url": "https://example.com/anime_30s.mp4",
+        "placeholder_url": os.getenv("ANIME_30S_PLACEHOLDER_URL", "https://example.com/anime_30s.mp4"),
         "model_intro_duration": 0,
         "outro_duration": 2,
         "text_fontsize": 50,
@@ -109,7 +109,7 @@ VIDEO_TEMPLATE_CONFIGS = {
     },
     "anime_60s": {
         "video_duration": 60,
-        "placeholder_url": "https://example.com/anime_60s.mp4",
+        "placeholder_url": os.getenv("ANIME_60S_PLACEHOLDER_URL", "https://example.com/anime_60s.mp4"),
         "model_intro_duration": 0,
         "outro_duration": 2,
         "text_fontsize": 45,
@@ -117,7 +117,7 @@ VIDEO_TEMPLATE_CONFIGS = {
     },
     "ascii_art_ad": {
         "video_duration": 30,
-        "placeholder_url": "https://example.com/ascii_art_ad.mp4",
+        "placeholder_url": os.getenv("ASCII_AD_PLACEHOLDER_URL", "https://example.com/ascii_art_ad.mp4"),
         "model_intro_duration": 0,
         "outro_duration": 2,
         "text_fontsize": 40,
@@ -125,7 +125,7 @@ VIDEO_TEMPLATE_CONFIGS = {
     },
     "retro_8bit_ad": {
         "video_duration": 30,
-        "placeholder_url": "https://example.com/retro_8bit_ad.mp4",
+        "placeholder_url": os.getenv("RETRO_8BIT_AD_PLACEHOLDER_URL", "https://example.com/retro_8bit_ad.mp4"),
         "model_intro_duration": 0,
         "outro_duration": 2,
         "text_fontsize": 30,
@@ -133,7 +133,7 @@ VIDEO_TEMPLATE_CONFIGS = {
     },
     "retro_16bit_ad": {
         "video_duration": 30,
-        "placeholder_url": "https://example.com/retro_16bit_ad.mp4",
+        "placeholder_url": os.getenv("RETRO_16BIT_AD_PLACEHOLDER_URL", "https://example.com/retro_16bit_ad.mp4"),
         "model_intro_duration": 0,
         "outro_duration": 2,
         "text_fontsize": 36,
@@ -141,7 +141,7 @@ VIDEO_TEMPLATE_CONFIGS = {
     },
     "retro_32bit_ad": {
         "video_duration": 30,
-        "placeholder_url": "https://example.com/retro_32bit_ad.mp4",
+        "placeholder_url": os.getenv("RETRO_32BIT_AD_PLACEHOLDER_URL", "https://example.com/retro_32bit_ad.mp4"),
         "model_intro_duration": 0,
         "outro_duration": 2,
         "text_fontsize": 42,

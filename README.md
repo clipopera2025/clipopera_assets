@@ -66,7 +66,14 @@ The `main.py` application exposes endpoints for generating ad copy, images and v
    DEMO_PASSWORD=<demo_password>
    # used by the video generation task for a mock 3D render clip
    MOCK_RENDERED_3D_VIDEO_URL=<https://your-bucket.s3.amazonaws.com/mock_render.mp4>
-   ```
+   ANIME_10S_PLACEHOLDER_URL=<https://your-bucket.s3.amazonaws.com/anime10.mp4>
+   ANIME_30S_PLACEHOLDER_URL=<https://your-bucket.s3.amazonaws.com/anime30.mp4>
+   ANIME_60S_PLACEHOLDER_URL=<https://your-bucket.s3.amazonaws.com/anime60.mp4>
+   ASCII_AD_PLACEHOLDER_URL=<https://your-bucket.s3.amazonaws.com/ascii.mp4>
+   RETRO_8BIT_AD_PLACEHOLDER_URL=<https://your-bucket.s3.amazonaws.com/8bit.mp4>
+   RETRO_16BIT_AD_PLACEHOLDER_URL=<https://your-bucket.s3.amazonaws.com/16bit.mp4>
+   RETRO_32BIT_AD_PLACEHOLDER_URL=<https://your-bucket.s3.amazonaws.com/32bit.mp4>
+  ```
    These variables are loaded at runtime using `python-dotenv`.
 
 ### Running

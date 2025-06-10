@@ -41,7 +41,7 @@ The `main.py` application exposes endpoints for generating ad copy, images and v
 
 ### Setup
 
-1. Install Python dependencies (includes `httpx` and `tenacity` for robust requests):
+1. Install Python dependencies (includes `httpx`, `tenacity`, and `python-jose` for JWT auth):
    ```bash
    pip install -r requirements.txt
    # ffmpeg is required for video generation
@@ -61,6 +61,9 @@ The `main.py` application exposes endpoints for generating ad copy, images and v
    META_APP_SECRET=<meta_app_secret>
    META_REDIRECT_URI=<https://yourdomain.com/meta/callback>
    CELERY_BROKER_URL=redis://localhost:6379/0
+   SECRET_KEY=<random_secret_key>
+   DEMO_USERNAME=<demo_username>
+   DEMO_PASSWORD=<demo_password>
    ```
    These variables are loaded at runtime using `python-dotenv`.
 
@@ -95,3 +98,6 @@ The API exposes several endpoints. Video and Meta ad creation run asynchronously
 * `POST /api/v1/platforms/meta/upload/video` – upload a video to Meta Ads
 * `POST /api/v1/platforms/meta/create_ad` – create a basic ad campaign and ad
 * `GET /api/v1/tasks/{task_id}` – fetch task status and result
+* `POST /token` – obtain a JWT access token
+* `POST /upload-model` – upload a 3D model file (authenticated)
+* `GET /models` – list uploaded model URLs (authenticated)

@@ -11,8 +11,11 @@ from celery import Celery
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 import google.generativeai as genai
@@ -37,6 +40,11 @@ META_APP_ID = os.getenv("META_APP_ID")
 META_APP_SECRET = os.getenv("META_APP_SECRET")
 META_REDIRECT_URI = os.getenv("META_REDIRECT_URI")
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+SECRET_KEY = os.getenv("SECRET_KEY", "change_me")
+DEMO_USERNAME = os.getenv("DEMO_USERNAME", "demo")
+DEMO_PASSWORD = os.getenv("DEMO_PASSWORD", "password")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable not set.")
@@ -94,6 +102,34 @@ s3_client = boto3.client(
 
 celery_app = Celery('worker', broker=CELERY_BROKER_URL, backend=CELERY_BROKER_URL)
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def authenticate_user(username: str, password: str) -> bool:
+    return username == DEMO_USERNAME and password == DEMO_PASSWORD
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid authentication credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username != DEMO_USERNAME:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    return username
+
+USER_MODELS: dict[str, list] = {}
+
 genai.configure(api_key=GEMINI_API_KEY)
 
 app = FastAPI(
@@ -145,6 +181,28 @@ class VideoInput(BaseModel):
 
 class VideoOutput(BaseModel):
     video_url: str
+
+
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    if not authenticate_user(form_data.username, form_data.password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+    access_token = create_access_token({"sub": form_data.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/upload-model")
+async def upload_model(file: UploadFile = File(...), current_user: str = Depends(get_current_user)):
+    key = f"models/{current_user}/{uuid.uuid4()}_{file.filename}"
+    await safe_s3_upload(file.file, key, file.content_type or "application/octet-stream")
+    url = f"https://{S3_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{key}"
+    USER_MODELS.setdefault(current_user, []).append({"id": uuid.uuid4().hex, "name": file.filename, "url": url})
+    return {"url": url}
+
+
+@app.get("/models")
+async def list_models(current_user: str = Depends(get_current_user)):
+    return USER_MODELS.get(current_user, [])
 
 @app.post("/api/v1/generate/ad_copy", response_model=AdCopyOutput)
 async def generate_ad_copy(input: AdCopyInput):

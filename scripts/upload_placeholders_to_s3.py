@@ -1,6 +1,9 @@
+"""Utility to upload placeholder videos used by the demo templates to S3."""
+
 import os
-import boto3
 from pathlib import Path
+
+import boto3
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,23 +23,27 @@ s3_client = boto3.client(
     region_name=AWS_REGION,
 )
 
-def upload_file(path: Path):
+def upload_file(path: Path) -> str:
+    """Upload a single video file to the placeholders folder on S3."""
     key = f"placeholders/{path.name}"
     s3_client.upload_file(
-        str(path), S3_BUCKET_NAME, key,
-        ExtraArgs={'ACL': 'public-read', 'ContentType': 'video/mp4'}
+        str(path),
+        S3_BUCKET_NAME,
+        key,
+        ExtraArgs={"ACL": "public-read", "ContentType": "video/mp4"},
     )
     url = f"https://{S3_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{key}"
     print(f"Uploaded {path} -> {url}")
     return url
 
 
-def main():
-    video_dir = Path('placeholders')
+def main() -> None:
+    """Upload all `.mp4` files in the `placeholders/` directory to S3."""
+    video_dir = Path("placeholders")
     if not video_dir.exists():
-        raise SystemExit('placeholders/ directory not found. Add your mp4 files there.')
+        raise SystemExit("placeholders/ directory not found. Add your mp4 files there.")
 
-    for mp4 in video_dir.glob('*.mp4'):
+    for mp4 in video_dir.glob("*.mp4"):
         upload_file(mp4)
 
 if __name__ == '__main__':

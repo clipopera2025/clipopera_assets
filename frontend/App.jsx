@@ -1,3 +1,4 @@
+// Demo React frontend for interacting with the ClipOpera API
 import React, { useRef, useState, useEffect, Suspense } from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
 import { OrbitControls, Stage, Html } from "@react-three/drei";

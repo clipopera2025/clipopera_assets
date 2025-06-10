@@ -76,6 +76,13 @@ The `main.py` application exposes endpoints for generating ad copy, images and v
   ```
    These variables are loaded at runtime using `python-dotenv`.
 
+### Uploading Placeholder Videos
+Place your placeholder .mp4 files in a `placeholders/` folder at the project root and run:
+```bash
+python scripts/upload_placeholders_to_s3.py
+```
+The script uploads each video to your configured S3 bucket and prints its public URL.
+
 ### Running
 
 Launch the server with Uvicorn:

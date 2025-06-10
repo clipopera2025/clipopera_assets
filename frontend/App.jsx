@@ -4,7 +4,7 @@ import { Canvas, useLoader } from "@react-three/fiber";
 import { OrbitControls, Stage, Html } from "@react-three/drei";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Card, CardContent } from "./components/ui/card";
-import { Button } from "./components/ui/button";
+import Button from "./components/ui/button";
 import { AudioLines, Loader2, Link, LogIn, UserPlus, Sparkle, Wand2, Video, Lightbulb } from "lucide-react";
 import jwtDecode from "jwt-decode";
 

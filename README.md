@@ -111,6 +111,7 @@ The API exposes several endpoints. Video and Meta ad creation run asynchronously
 * `POST /api/v1/platforms/meta/upload/image` – upload an image to Meta Ads
 * `POST /api/v1/platforms/meta/upload/video` – upload a video to Meta Ads
 * `POST /api/v1/platforms/meta/create_ad` – create a basic ad campaign and ad
+* `POST /api/v1/platforms/meta/publish_ad` – publish a scheduled ad campaign
 * `GET /api/v1/tasks/{task_id}` – fetch task status and result
 * `POST /token` – obtain a JWT access token
 * `POST /register` – create a new user account

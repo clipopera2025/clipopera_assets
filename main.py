@@ -420,10 +420,42 @@ class MetaAdInput(BaseModel):
     daily_budget: int = 1000
     objective: str = "LINK_CLICKS"
 
+class CampaignConfigInput(BaseModel):
+    """Configuration for publishing a Meta ad with optional scheduling."""
+    user_id: str
+    ad_account_id: str
+    page_id: str
+    headline: str
+    body: str
+    link_url: str
+    cta: str = "LEARN_MORE"
+    asset_url: str
+    asset_type: str = Field("video", pattern=r"^(video|image)$")
+    daily_budget: int = 1000
+    objective: str = "LINK_CLICKS"
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    campaign_id: Optional[str] = None
+    campaign_name: Optional[str] = None
+    adset_id: Optional[str] = None
+    adset_name: Optional[str] = None
+
 
 @app.post("/api/v1/platforms/meta/create_ad", response_model=TaskStatus)
 async def meta_create_ad(input: MetaAdInput):
     task = celery_app.send_task("create_meta_ad_task", args=[input.dict()])
+    return TaskStatus(task_id=task.id)
+
+
+@app.post("/api/v1/platforms/meta/publish_ad", response_model=TaskStatus)
+async def meta_publish_ad(cfg: CampaignConfigInput):
+    """Publish an ad to Meta with optional scheduling."""
+    token = TOKEN_STORE.get(cfg.user_id)
+    if not token:
+        raise HTTPException(status_code=400, detail="User not authorized")
+    payload = cfg.dict()
+    payload["access_token"] = token
+    task = celery_app.send_task("publish_meta_ad_task", args=[payload])
     return TaskStatus(task_id=task.id)
 
 

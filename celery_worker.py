@@ -143,6 +143,26 @@ class MetaAdInput(BaseModel):
     daily_budget: int = 1000
     objective: str = "LINK_CLICKS"
 
+class CampaignConfigInput(BaseModel):
+    user_id: str
+    ad_account_id: str
+    page_id: str
+    headline: str
+    body: str
+    link_url: str
+    cta: str = "LEARN_MORE"
+    asset_url: str
+    asset_type: str = Field("video", pattern=r"^(video|image)$")
+    daily_budget: int = 1000
+    objective: str = "LINK_CLICKS"
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    campaign_id: Optional[str] = None
+    campaign_name: Optional[str] = None
+    adset_id: Optional[str] = None
+    adset_name: Optional[str] = None
+    access_token: Optional[str] = None
+
 
 async def generate_video_async(data: VideoInput) -> str:
     cfg = VIDEO_TEMPLATE_CONFIGS.get(data.template_id, {})
@@ -253,6 +273,86 @@ async def create_meta_ad_async(data: MetaAdInput) -> dict:
     return {"ad_id": ad[Ad.Field.id], "campaign_id": campaign_id, "adset_id": adset_id}
 
 
+async def publish_meta_ad_async(cfg: CampaignConfigInput) -> dict:
+    """Upload an asset and create a scheduled ad."""
+    token = cfg.access_token
+    FacebookAdsApi.init(access_token=token)
+    account = AdAccount(f"act_{cfg.ad_account_id}")
+
+    camp_id = cfg.campaign_id
+    if not camp_id:
+        campaign = account.create_campaign(params={
+            Campaign.Field.name: cfg.campaign_name or "Generated Campaign",
+            Campaign.Field.status: Campaign.Status.paused,
+            Campaign.Field.objective: cfg.objective,
+        })
+        camp_id = campaign[Campaign.Field.id]
+
+    adset_id = cfg.adset_id
+    if not adset_id:
+        params = {
+            AdSet.Field.name: cfg.adset_name or "Generated Ad Set",
+            AdSet.Field.campaign_id: camp_id,
+            AdSet.Field.daily_budget: str(cfg.daily_budget),
+            AdSet.Field.billing_event: AdSet.BillingEvent.impressions,
+            AdSet.Field.optimization_goal: AdSet.OptimizationGoal.link_clicks,
+            AdSet.Field.targeting: {"geo_locations": {"countries": ["US"]}},
+            AdSet.Field.status: AdSet.Status.paused,
+        }
+        if cfg.start_time:
+            params[AdSet.Field.start_time] = int(cfg.start_time.timestamp())
+        if cfg.end_time:
+            params[AdSet.Field.end_time] = int(cfg.end_time.timestamp())
+        adset = account.create_ad_set(params=params)
+        adset_id = adset[AdSet.Field.id]
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(cfg.asset_url)
+        resp.raise_for_status()
+        suffix = ".mp4" if cfg.asset_type == "video" else ".png"
+        tmp = NamedTemporaryFile(delete=False, suffix=suffix)
+        tmp.write(resp.content)
+        tmp.flush()
+
+    if cfg.asset_type == "video":
+        video = AdVideo(parent_id=account.get_id())
+        video[AdVideo.Field.filename] = tmp.name
+        video.remote_create()
+        asset_ref = {"video_id": video[AdVideo.Field.id]}
+    else:
+        ad_image = AdImage(parent_id=account.get_id())
+        ad_image[AdImage.Field.filename] = tmp.name
+        ad_image.remote_create()
+        asset_ref = {"image_hash": ad_image[AdImage.Field.hash]}
+    os.unlink(tmp.name)
+
+    creative_spec = {
+        "page_id": cfg.page_id,
+        "link_data": {
+            "message": cfg.body,
+            "link": cfg.link_url,
+            "call_to_action": {"type": cfg.cta},
+            "name": cfg.headline,
+        },
+    }
+    if cfg.asset_type == "video":
+        creative_spec["video_data"] = asset_ref
+    else:
+        creative_spec["link_data"].update(asset_ref)
+
+    creative = account.create_ad_creative(params={
+        AdCreative.Field.name: "Generated Creative",
+        AdCreative.Field.object_story_spec: creative_spec,
+    })
+    ad = account.create_ad(params={
+        Ad.Field.name: "Generated Ad",
+        Ad.Field.adset_id: adset_id,
+        Ad.Field.creative: {"creative_id": creative[AdCreative.Field.id]},
+        Ad.Field.status: Ad.Status.paused,
+    })
+    return {"ad_id": ad[Ad.Field.id], "campaign_id": camp_id, "adset_id": adset_id}
+
+
 @celery_app.task(name="generate_video_task")
 def generate_video_task(data: dict) -> str:
     """Background task to create a video from scene definitions."""
@@ -264,3 +364,10 @@ def create_meta_ad_task(data: dict) -> dict:
     """Background task to create a Meta ad campaign and creative."""
     inp = MetaAdInput(**data)
     return asyncio.run(create_meta_ad_async(inp))
+
+
+@celery_app.task(name="publish_meta_ad_task")
+def publish_meta_ad_task(data: dict) -> dict:
+    """Background task to upload an asset and create a scheduled Meta ad."""
+    inp = CampaignConfigInput(**data)
+    return asyncio.run(publish_meta_ad_async(inp))

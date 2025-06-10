@@ -5,8 +5,16 @@ import { OrbitControls, Stage, Html } from "@react-three/drei";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
-import { AudioLines, Loader2, Link, LogIn, UserPlus } from "lucide-react";
+import { AudioLines, Loader2, Link, LogIn, UserPlus, Sparkle, Wand2, Video, Lightbulb } from "lucide-react";
 import jwtDecode from "jwt-decode";
+
+// Define your video templates here, before the App component
+const VIDEO_TEMPLATES = [
+  { id: 'standard', name: 'Standard Ad' },
+  { id: 'fast_paced', name: 'Fast Paced' },
+  { id: 'luxury_showcase', name: 'Luxury Showcase' },
+  { id: 'explainer', name: 'Explainer Video' },
+];
 
 function GLTFModel({ url }) {
   const gltf = useLoader(GLTFLoader, url);
@@ -32,6 +40,15 @@ export default function App() {
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
   const [metaAccountLinked, setMetaAccountLinked] = useState(false);
   const timeoutWarningRef = useRef(null);
+  const [metaTokenExpiry, setMetaTokenExpiry] = useState(null);
+  const [audioOverviewUrl, setAudioOverviewUrl] = useState(null);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(VIDEO_TEMPLATES[0].id);
+  const [viralScore, setViralScore] = useState(null);
+  const [toneAnalysis, setToneAnalysis] = useState(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
+  const [suggestedPrompts, setSuggestedPrompts] = useState([]);
 
   const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8000";
   const audioRef = useRef(new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'));

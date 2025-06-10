@@ -87,7 +87,7 @@ The script uploads each video to your configured S3 bucket and prints its public
 Launch the server with Uvicorn:
 
 ```bash
-uvicorn main:app --reload
+uvicorn main:app --host 0.0.0.0 --port $PORT
 ```
 
 Visit `http://localhost:8000/docs` for interactive Swagger docs.

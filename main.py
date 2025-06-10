@@ -12,6 +12,7 @@ import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from jose import JWTError, jwt
@@ -141,6 +142,15 @@ genai.configure(api_key=GEMINI_API_KEY)
 app = FastAPI(
     title="Social Ad Generator API",
     description="API for generating social media ad copy, images, and videos using AI."
+)
+
+# Configure CORS so the frontend can access the API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[os.getenv("CORS_ORIGIN", "http://localhost:3000")],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Simple health check endpoint for uptime monitoring

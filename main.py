@@ -143,6 +143,11 @@ app = FastAPI(
     description="API for generating social media ad copy, images, and videos using AI."
 )
 
+# Simple health check endpoint for uptime monitoring
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "ok"}
+
 class AdCopyInput(BaseModel):
     product_name: str
     product_description: str = Field(..., max_length=500)

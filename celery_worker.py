@@ -16,6 +16,8 @@ from moviepy.editor import (
     concatenate_videoclips,
     concatenate_audioclips,
     AudioFileClip,
+    VideoFileClip,  # for 3D model intro clips
+    vfx,
 )
 from gtts import gTTS
 import boto3
@@ -61,37 +63,89 @@ retry_config = dict(stop=stop_after_attempt(3), wait=wait_fixed(2))
 # Mapping of video template IDs to settings like target duration and
 # optional placeholder video URLs used for the demo anime templates.
 VIDEO_TEMPLATE_CONFIGS = {
-    "standard": {"video_duration": 30},
-    "fast_paced": {"video_duration": 15},
-    "luxury_showcase": {"video_duration": 30},
-    "explainer": {"video_duration": 60},
+    "standard": {
+        "video_duration": 30,
+        "model_intro_duration": 3,
+        "outro_duration": 2,
+        "final_outro_text": "Learn More at Our Website!",
+        "text_fontsize": 48,
+    },
+    "fast_paced": {
+        "video_duration": 15,
+        "model_intro_duration": 2,
+        "outro_duration": 2,
+        "final_outro_text": "Check it out now!",
+        "text_fontsize": 40,
+    },
+    "luxury_showcase": {
+        "video_duration": 30,
+        "model_intro_duration": 5,
+        "outro_duration": 2,
+        "final_outro_text": "Experience Luxury Today",
+        "text_fontsize": 60,
+    },
+    "explainer": {
+        "video_duration": 60,
+        "model_intro_duration": 2,
+        "outro_duration": 2,
+        "final_outro_text": "Find out more on our site",
+        "text_fontsize": 45,
+    },
     "anime_10s": {
         "video_duration": 10,
         "placeholder_url": "https://example.com/anime_10s.mp4",
+        "model_intro_duration": 0,
+        "outro_duration": 2,
+        "text_fontsize": 55,
+        "final_outro_text": "ClipOpera Anime Ads!",
     },
     "anime_30s": {
         "video_duration": 30,
         "placeholder_url": "https://example.com/anime_30s.mp4",
+        "model_intro_duration": 0,
+        "outro_duration": 2,
+        "text_fontsize": 50,
+        "final_outro_text": "ClipOpera Anime Ads!",
     },
     "anime_60s": {
         "video_duration": 60,
         "placeholder_url": "https://example.com/anime_60s.mp4",
+        "model_intro_duration": 0,
+        "outro_duration": 2,
+        "text_fontsize": 45,
+        "final_outro_text": "ClipOpera Anime Ads!",
     },
     "ascii_art_ad": {
         "video_duration": 30,
         "placeholder_url": "https://example.com/ascii_art_ad.mp4",
+        "model_intro_duration": 0,
+        "outro_duration": 2,
+        "text_fontsize": 40,
+        "final_outro_text": "ASCII Ad by ClipOpera!",
     },
     "retro_8bit_ad": {
         "video_duration": 30,
         "placeholder_url": "https://example.com/retro_8bit_ad.mp4",
+        "model_intro_duration": 0,
+        "outro_duration": 2,
+        "text_fontsize": 30,
+        "final_outro_text": "8-Bit Fun with ClipOpera!",
     },
     "retro_16bit_ad": {
         "video_duration": 30,
         "placeholder_url": "https://example.com/retro_16bit_ad.mp4",
+        "model_intro_duration": 0,
+        "outro_duration": 2,
+        "text_fontsize": 36,
+        "final_outro_text": "Level Up Your Ads!",
     },
     "retro_32bit_ad": {
         "video_duration": 30,
         "placeholder_url": "https://example.com/retro_32bit_ad.mp4",
+        "model_intro_duration": 0,
+        "outro_duration": 2,
+        "text_fontsize": 42,
+        "final_outro_text": "Experience Retro Power!",
     },
 }
 
@@ -125,6 +179,7 @@ class VideoInput(BaseModel):
     height: int = 1280
     fps: int = 30
     template_id: str = "standard"
+    model_url: Optional[str] = None
 
 class MetaAdInput(BaseModel):
     user_id: str
@@ -164,15 +219,45 @@ class CampaignConfigInput(BaseModel):
     access_token: Optional[str] = None
 
 
+# ---------------------------------------------------------------------------
+# 3D MODEL RENDERING MOCK
+# ---------------------------------------------------------------------------
+async def request_3d_model_render(model_url: str, animation_type: str = "turntable") -> str:
+    """Return a placeholder video URL representing a rendered 3D model."""
+    logger.info(f"[3D Render Mock] Requesting {animation_type} render for model: {model_url}")
+    await asyncio.sleep(2)
+    mock_render_url = os.getenv("MOCK_RENDERED_3D_VIDEO_URL", "https://example.com/rendered_3d_model_placeholder.mp4")
+    if mock_render_url == "https://example.com/rendered_3d_model_placeholder.mp4":
+        logger.warning("MOCK_RENDERED_3D_VIDEO_URL not set. Using generic placeholder.")
+    logger.info(f"[3D Render Mock] Returning mocked render URL: {mock_render_url}")
+    return mock_render_url
+
+
 async def generate_video_async(data: VideoInput) -> str:
     cfg = VIDEO_TEMPLATE_CONFIGS.get(data.template_id, {})
     placeholder = cfg.get("placeholder_url")
     if placeholder:
+        logger.info(f"[{data.template_id}] Using template-specific placeholder video: {placeholder}")
         return placeholder
 
     clips = []
     audio_clips = []
     temp_files = []
+
+    if getattr(data, "model_url", None) and cfg.get("model_intro_duration", 0) > 0:
+        try:
+            rendered_url = await request_3d_model_render(data.model_url)
+            model_video_resp = await safe_get(rendered_url)
+            tmp_model_video = NamedTemporaryFile(delete=False, suffix=".mp4")
+            temp_files.append(tmp_model_video.name)
+            with open(tmp_model_video.name, "wb") as f:
+                f.write(model_video_resp.content)
+            model_clip = VideoFileClip(tmp_model_video.name).resize((data.width, data.height))
+            model_clip = model_clip.set_duration(cfg.get("model_intro_duration"))
+            clips.append(model_clip)
+            logger.info("3D model video successfully integrated into final ad.")
+        except Exception as e:
+            logger.error(f"[3D Render Integration Error] {e}")
     for scene in data.scenes:
         if scene.image_url:
             img_resp = await safe_get(scene.image_url)
@@ -197,16 +282,29 @@ async def generate_video_async(data: VideoInput) -> str:
             comp = comp.set_audio(audio)
             audio_clips.append(audio)
         clips.append(comp)
+
+    outro_duration = cfg.get("outro_duration", 2)
+    outro_clip = ColorClip(size=(data.width, data.height), color=(0,0,0)).set_duration(outro_duration)
+    outro_text_clip = TextClip(cfg.get("final_outro_text", "Visit our website!"), fontsize=cfg.get("text_fontsize", 48), color="white").set_position("center").set_duration(outro_duration)
+    final_outro = CompositeVideoClip([outro_clip, outro_text_clip])
+    clips.append(final_outro)
     final_video = concatenate_videoclips(clips, method="compose")
-    target_duration = cfg.get("video_duration")
-    if target_duration:
-        if final_video.duration > target_duration:
-            final_video = final_video.subclip(0, target_duration)
-        elif final_video.duration < target_duration:
-            pad = ColorClip(size=(data.width, data.height), color=(0,0,0), duration=target_duration - final_video.duration)
+    fixed_total_duration = cfg.get("video_duration")
+    if fixed_total_duration:
+        if final_video.duration > fixed_total_duration:
+            final_video = final_video.subclip(0, fixed_total_duration)
+            logger.info(f"Video trimmed to {fixed_total_duration}s.")
+        elif final_video.duration < fixed_total_duration:
+            pad = ColorClip(size=(data.width, data.height), color=(0,0,0), duration=fixed_total_duration - final_video.duration)
             final_video = concatenate_videoclips([final_video, pad], method="compose")
+            logger.info(f"Video extended to {fixed_total_duration}s with filler.")
     if audio_clips:
         final_audio = concatenate_audioclips(audio_clips)
+        if fixed_total_duration:
+            if final_audio.duration > final_video.duration:
+                final_audio = final_audio.subclip(0, final_video.duration)
+            elif final_audio.duration < final_video.duration:
+                final_audio = final_audio.fx(vfx.loop, duration=final_video.duration)
         final_video = final_video.set_audio(final_audio)
     out_file = NamedTemporaryFile(delete=False, suffix=".mp4")
     temp_files.append(out_file.name)

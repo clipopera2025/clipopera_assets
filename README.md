@@ -64,6 +64,8 @@ The `main.py` application exposes endpoints for generating ad copy, images and v
    SECRET_KEY=<random_secret_key>
    DEMO_USERNAME=<demo_username>
    DEMO_PASSWORD=<demo_password>
+   # used by the video generation task for a mock 3D render clip
+   MOCK_RENDERED_3D_VIDEO_URL=<https://your-bucket.s3.amazonaws.com/mock_render.mp4>
    ```
    These variables are loaded at runtime using `python-dotenv`.
 
@@ -95,6 +97,7 @@ AWS_REGION=<aws_region>
 S3_BUCKET_NAME=<s3_bucket>
 OPENAI_API_KEY=<openai_key>
 GEMINI_API_KEY=<gemini_key>
+MOCK_RENDERED_3D_VIDEO_URL=<https://your-bucket.s3.amazonaws.com/mock_render.mp4>
 ```
 
 Without these the worker will exit on start-up because it cannot upload

@@ -132,6 +132,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
     return username
 
 USER_MODELS: dict[str, list] = {}
+# simple store for saved ads in this demo
+USER_SAVED_ADS: dict[str, list] = {}
+_next_ad_id = 1
 
 genai.configure(api_key=GEMINI_API_KEY)
 
@@ -469,3 +472,49 @@ async def get_task(task_id: str):
     if res.state == "SUCCESS":
         return {"status": "success", "result": res.result}
     return {"status": res.state.lower()}
+
+# --- Saved Ad Endpoints (in-memory demo) ---
+
+@app.post("/ads/save", response_model=SavedAdDisplay)
+async def save_ad_endpoint(ad_data: SavedAdCreate, current_user: str = Depends(get_current_user)):
+    global _next_ad_id
+    new_ad = ad_data.dict()
+    new_ad["id"] = _next_ad_id
+    new_ad["user_id"] = current_user
+    new_ad["created_at"] = datetime.utcnow()
+    _next_ad_id += 1
+    USER_SAVED_ADS.setdefault(current_user, []).append(new_ad)
+    return SavedAdDisplay(**new_ad)
+
+
+@app.get("/ads/my-ads", response_model=List[SavedAdDisplay])
+async def get_my_ads_endpoint(current_user: str = Depends(get_current_user)):
+    return USER_SAVED_ADS.get(current_user, [])
+
+
+@app.get("/ads/{ad_id}", response_model=SavedAdDisplay)
+async def get_saved_ad_endpoint(ad_id: int, current_user: str = Depends(get_current_user)):
+    for ad in USER_SAVED_ADS.get(current_user, []):
+        if ad["id"] == ad_id:
+            return SavedAdDisplay(**ad)
+    raise HTTPException(status_code=404, detail="Ad not found or access denied")
+
+
+@app.put("/ads/{ad_id}", response_model=SavedAdDisplay)
+async def update_ad_endpoint(ad_id: int, ad_data: SavedAdCreate, current_user: str = Depends(get_current_user)):
+    for i, ad in enumerate(USER_SAVED_ADS.get(current_user, [])):
+        if ad["id"] == ad_id:
+            updated_ad = ad.copy()
+            updated_ad.update(ad_data.dict(exclude_unset=True))
+            USER_SAVED_ADS[current_user][i] = updated_ad
+            return SavedAdDisplay(**updated_ad)
+    raise HTTPException(status_code=404, detail="Ad not found or access denied")
+
+
+@app.delete("/ads/{ad_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_saved_ad_endpoint(ad_id: int, current_user: str = Depends(get_current_user)):
+    initial_len = len(USER_SAVED_ADS.get(current_user, []))
+    USER_SAVED_ADS[current_user] = [ad for ad in USER_SAVED_ADS.get(current_user, []) if ad["id"] != ad_id]
+    if len(USER_SAVED_ADS.get(current_user, [])) == initial_len:
+        raise HTTPException(status_code=404, detail="Ad not found or access denied")
+    return

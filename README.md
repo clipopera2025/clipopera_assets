@@ -85,6 +85,8 @@ To process requests, run a Celery worker in a separate terminal:
 ```bash
 celery -A celery_worker.celery_app worker --loglevel=info
 ```
+Ensure the worker environment also has AWS and other credentials configured,
+since it uploads generated media to S3.
 
 The API exposes several endpoints. Video and Meta ad creation run asynchronously and return a `task_id` which can be polled via `/api/v1/tasks/{task_id}`:
 

@@ -43,6 +43,10 @@ S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
 BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
 
+if not all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, S3_BUCKET_NAME]):
+    raise ValueError("AWS credentials or S3 bucket not configured for Celery worker")
+
+
 celery_app = Celery("tasks", broker=BROKER_URL, backend=BROKER_URL)
 
 s3_client = boto3.client(

@@ -85,8 +85,20 @@ To process requests, run a Celery worker in a separate terminal:
 ```bash
 celery -A celery_worker.celery_app worker --loglevel=info
 ```
-Ensure the worker environment also has AWS and other credentials configured,
-since it uploads generated media to S3.
+Ensure the worker environment also has AWS and related credentials configured.
+The following variables are required when running the worker:
+
+```ini
+AWS_ACCESS_KEY_ID=<aws_access_key>
+AWS_SECRET_ACCESS_KEY=<aws_secret_key>
+AWS_REGION=<aws_region>
+S3_BUCKET_NAME=<s3_bucket>
+OPENAI_API_KEY=<openai_key>
+GEMINI_API_KEY=<gemini_key>
+```
+
+Without these the worker will exit on start-up because it cannot upload
+generated media to S3 or call the generative APIs.
 
 The API exposes several endpoints. Video and Meta ad creation run asynchronously and return a `task_id` which can be polled via `/api/v1/tasks/{task_id}`:
 

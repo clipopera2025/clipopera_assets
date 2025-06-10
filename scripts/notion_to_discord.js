@@ -1,3 +1,4 @@
+// Utility script to post new Notion entries to Discord.
 const { Client } = require('@notionhq/client');
 const { google } = require('googleapis');
 const fs = require('fs');

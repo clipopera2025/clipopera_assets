@@ -166,6 +166,7 @@ Install dependencies and run:
 cd node_demo
 npm install
 npm start
+npm test         # runs a simple placeholder test script
 ```
 
 Then visit `http://localhost:3000` to try uploading a file or initiating Meta login.

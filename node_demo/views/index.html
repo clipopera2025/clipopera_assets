@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AWS + Meta App</title>
+</head>
+<body>
+  <h1>Upload File to AWS S3</h1>
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" required>
+    <button type="submit">Upload</button>
+  </form>
+
+  <h2>Meta OAuth</h2>
+  <a href="/meta/login">
+    <button>Login with Meta</button>
+  </a>
+</body>
+</html>

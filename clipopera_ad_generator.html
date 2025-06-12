@@ -1,123 +1,289 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ClipOpera Ad Generator</title>
-  <style>
-    body { background: black; color: lime; font-family: monospace; text-align: center; }
-    canvas { display: block; margin: 10px auto; border: 2px solid lime; }
-    #controls { margin-top: 10px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipOpera Neon Generator</title>
+<script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+<style>
+  body {
+    background: linear-gradient(to right, #0f0f0f, #1a1a1a);
+    color: #39ff14;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    padding: 20px;
+  }
+  select, input, button {
+    font-family: inherit;
+    font-size: 16px;
+    margin: 10px;
+    padding: 8px;
+    background: #222;
+    border: 2px solid #39ff14;
+    color: #39ff14;
+    border-radius: 5px;
+    box-shadow: 0 0 10px #39ff14;
+    cursor: pointer;
+  }
+  input[type="text"] {
+      width: 300px;
+  }
+  canvas {
+    display: block;
+    margin: 20px auto;
+    border: 3px solid #39ff14;
+    box-shadow: 0 0 15px #39ff14;
+    background-color: #000;
+  }
+  .controls-group {
+      margin-bottom: 15px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 15px;
+  }
+</style>
 </head>
 <body>
-  <h1>🎞️ ClipOpera Ad Generator</h1>
+<h1>🎬 ClipOpera Neon Ad Generator 🎬</h1>
+<script>
+// --- State Variables ---
+let fitMode = 'contain';
+let imageURL = null;
+let audioURL = null;
+const imgEl = new Image();
+let userText = "NEON CITY";
 
-  <canvas id="previewCanvas" width="300" height="480"></canvas>
+const controlsContainer = document.createElement('div');
+controlsContainer.className = 'controls-group';
+document.body.appendChild(controlsContainer);
 
-  <div id="controls">
-    <select id="fitMode">
-      <option value="contain">Contain</option>
-      <option value="cover">Cover</option>
-    </select>
-    <button onclick="exportGIF()">🖼️ Export GIF</button>
-    <button onclick="exportMP4()">🎥 Export MP4</button>
-    <input type="file" id="upload" accept="image/*,video/*" />
-  </div>
+const select = document.createElement('select');
+select.id = 'fitModeSelector';
+select.innerHTML = `<option value="contain">Contain</option><option value="cover">Cover</option>`;
+select.onchange = e => {
+  fitMode = e.target.value;
+  if (imgEl.src) updatePreview();
+};
+controlsContainer.appendChild(select);
 
-  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-  <script>
-    const canvas = document.getElementById('previewCanvas');
-    const ctx = canvas.getContext('2d');
-    const upload = document.getElementById('upload');
-    let mediaElement;
+const textInput = document.createElement('input');
+textInput.type = 'text';
+textInput.value = userText;
+textInput.placeholder = 'Overlay text';
+textInput.oninput = e => {
+  userText = e.target.value;
+  if (imgEl.src) updatePreview();
+};
+controlsContainer.appendChild(textInput);
 
-    function fitMedia(media) {
-      const mode = document.getElementById('fitMode').value;
-      const { width, height } = media.videoWidth ? { width: media.videoWidth, height: media.videoHeight } : media;
-      const srcAspect = width / height;
-      const canvasAspect = canvas.width / canvas.height;
-      let drawW, drawH, x, y;
-      if (mode === 'cover' ? srcAspect < canvasAspect : srcAspect > canvasAspect) {
-        drawH = canvas.height;
-        drawW = drawH * srcAspect;
-      } else {
-        drawW = canvas.width;
-        drawH = drawW / srcAspect;
-      }
-      x = (canvas.width - drawW) / 2;
-      y = (canvas.height - drawH) / 2;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(media, x, y, drawW, drawH);
+const imageUpload = document.createElement('input');
+imageUpload.type = 'file';
+imageUpload.accept = 'image/*';
+imageUpload.onchange = e => {
+  const file = e.target.files[0];
+  if (file) {
+    if (imageURL) URL.revokeObjectURL(imageURL);
+    imageURL = URL.createObjectURL(file);
+    imgEl.src = imageURL;
+    imgEl.onload = () => updatePreview();
+  }
+};
+controlsContainer.appendChild(document.createTextNode(' Image: '));
+controlsContainer.appendChild(imageUpload);
+
+const audioUpload = document.createElement('input');
+audioUpload.type = 'file';
+audioUpload.accept = 'audio/*';
+audioUpload.onchange = e => {
+    const file = e.target.files[0];
+    if (file) {
+        if (audioURL) URL.revokeObjectURL(audioURL);
+        audioURL = URL.createObjectURL(file);
+        alert('Audio file selected!');
     }
+};
+controlsContainer.appendChild(document.createTextNode(' Audio: '));
+controlsContainer.appendChild(audioUpload);
 
-    upload.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const url = URL.createObjectURL(file);
-      const isVideo = file.type.startsWith('video');
-      mediaElement = document.createElement(isVideo ? 'video' : 'img');
-      mediaElement.crossOrigin = 'anonymous';
-      mediaElement.src = url;
-      if (isVideo) {
-        mediaElement.onloadeddata = () => {
-          mediaElement.currentTime = 0;
-          mediaElement.play();
-          setInterval(() => fitMedia(mediaElement), 1000);
-        };
-      } else {
-        mediaElement.onload = () => fitMedia(mediaElement);
-      }
-    });
+const exportGifBtn = document.createElement('button');
+exportGifBtn.textContent = '🖼️ Export Animated GIF';
+exportGifBtn.onclick = exportAnimatedGif;
+controlsContainer.appendChild(exportGifBtn);
 
-    function exportGIF() {
-      if (!mediaElement) return;
-      const gif = new GIF({ workers: 2, quality: 10, width: canvas.width, height: canvas.height });
-      let frameCount = 10;
-      for (let i = 0; i < frameCount; i++) {
-        fitMedia(mediaElement);
-        gif.addFrame(ctx, { copy: true, delay: 100 });
-      }
-      gif.on('finished', blob => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'clipopera.gif';
-        link.click();
-      });
-      gif.render();
+const exportMp4Btn = document.createElement('button');
+exportMp4Btn.textContent = '🎥 Export MP4 Video';
+exportMp4Btn.onclick = async () => {
+    const blob = await generateVideoBlob(exportMp4Btn);
+    if (!blob) return;
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `clipopera_video.mp4`;
+    a.click();
+    URL.revokeObjectURL(url);
+};
+controlsContainer.appendChild(exportMp4Btn);
+
+const previewCanvas = document.createElement('canvas');
+previewCanvas.id = 'fitPreview';
+previewCanvas.width = 300;
+previewCanvas.height = 480;
+document.body.appendChild(previewCanvas);
+const previewCtx = previewCanvas.getContext('2d');
+
+function updatePreview() {
+    if (!imgEl.naturalWidth) return;
+    const fit = calculateAspectFit(imgEl.naturalWidth, imgEl.naturalHeight, previewCanvas.width, previewCanvas.height, fitMode);
+    previewCtx.fillStyle = 'black';
+    previewCtx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+    previewCtx.drawImage(imgEl, fit.x, fit.y, fit.width, fit.height);
+    
+    // Neon Text Drawing
+    previewCtx.font = "bold 24px 'Courier New', monospace";
+    previewCtx.textAlign = 'center';
+    previewCtx.shadowColor = '#39ff14';
+    previewCtx.shadowBlur = 10;
+    previewCtx.fillStyle = '#39ff14';
+    previewCtx.fillText(userText.toUpperCase(), previewCanvas.width / 2, previewCanvas.height - 30);
+    previewCtx.shadowBlur = 0;
+    previewCtx.fillStyle = '#fff';
+    previewCtx.fillText(userText.toUpperCase(), previewCanvas.width / 2, previewCanvas.height - 30);
+}
+
+function calculateAspectFit(srcWidth, srcHeight, maxWidth, maxHeight, mode = 'contain') {
+  const srcAspect = srcWidth / srcHeight;
+  const targetAspect = maxWidth / maxHeight;
+  let width, height, x = 0, y = 0;
+  if (mode === 'cover') {
+    if (srcAspect > targetAspect) {
+      height = maxHeight;
+      width = height * srcAspect;
+      x = (maxWidth - width) / 2;
+    } else {
+      width = maxWidth;
+      height = width / srcAspect;
+      y = (maxHeight - height) / 2;
     }
+  } else {
+    const ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
+    width = srcWidth * ratio;
+    height = srcHeight * ratio;
+    x = (maxWidth - width) / 2;
+    y = (maxHeight - height) / 2;
+  }
+  return { width, height, x, y };
+}
 
-    async function exportMP4() {
-      if (!mediaElement || !mediaElement.videoWidth) return;
-      const { createFFmpeg, fetchFile } = FFmpeg;
-      const ffmpeg = createFFmpeg({ log: true });
-      await ffmpeg.load();
+function exportAnimatedGif() {
+  if (!imageURL) return alert('Please upload an image first.');
+  const gif = new GIF({ workers: 2, quality: 10, width: previewCanvas.width, height: previewCanvas.height });
+  gif.addFrame(previewCtx, { copy: true, delay: 1000 });
+  gif.on('finished', blob => {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = "clipopera_animation.gif";
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+  gif.render();
+}
 
-      const tempCanvas = document.createElement('canvas');
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCanvas.width = canvas.width;
-      tempCanvas.height = canvas.height;
-      let frameNames = [];
+/**
+ * --- NEW: Refactored video generation logic ---
+ * This function now handles the entire FFmpeg process and returns a blob.
+ * @param {HTMLButtonElement} triggerButton - The button that started the process, for UI feedback.
+ * @returns {Promise<Blob|null>} A promise that resolves with the video blob, or null if failed.
+ */
+async function generateVideoBlob(triggerButton) {
+  if (!imageURL || !audioURL) {
+      alert('Please upload both an image and an audio file first.');
+      return null;
+  }
+  
+  const originalText = triggerButton.textContent;
+  triggerButton.textContent = 'Generating...';
+  triggerButton.disabled = true;
 
-      for (let i = 0; i < 10; i++) {
-        fitMedia(mediaElement);
-        tempCtx.drawImage(canvas, 0, 0);
-        const blob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/png'));
-        const name = `frame${i}.png`;
-        ffmpeg.FS('writeFile', name, await fetchFile(blob));
-        frameNames.push(name);
-      }
+  try {
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ff = createFFmpeg({ log: true });
+    await ff.load();
 
-      await ffmpeg.run('-framerate', '1', '-i', 'frame%d.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', 'output.mp4');
-      const data = ffmpeg.FS('readFile', 'output.mp4');
-      const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
-      const url = URL.createObjectURL(videoBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'clipopera.mp4';
-      link.click();
+    await ff.FS('writeFile', 'frame.png', await fetchFile(previewCanvas.toDataURL('image/png')));
+    await ff.FS('writeFile', 'audio.mp3', await fetchFile(audioURL));
+    await ff.run('-loop', '1', '-i', 'frame.png', '-i', 'audio.mp3', '-c:v', 'libx264', '-c:a', 'aac', '-pix_fmt', 'yuv420p', '-shortest', 'out.mp4');
+
+    const data = ff.FS('readFile', 'out.mp4');
+    ff.exit();
+    return new Blob([data.buffer], { type: 'video/mp4' });
+  } catch (error) {
+      console.error("FFmpeg error:", error);
+      alert("An error occurred during video generation.");
+      return null;
+  } finally {
+      triggerButton.textContent = originalText;
+      triggerButton.disabled = false;
+  }
+}
+
+// --- NEW AND UPDATED INTEGRATION BUTTONS ---
+
+// 1. Discord Upload Button (Now Functional)
+const discordUpload = document.createElement('button');
+discordUpload.textContent = '🚀 Upload to Discord';
+discordUpload.onclick = async () => {
+    const webhookURL = prompt("Please enter your Discord Webhook URL:");
+    if (!webhookURL) return;
+
+    // Generate the video blob first
+    const blob = await generateVideoBlob(discordUpload);
+    if (!blob) return;
+
+    // Upload the blob to Discord
+    discordUpload.textContent = "Uploading...";
+    discordUpload.disabled = true;
+
+    const formData = new FormData();
+    formData.append('content', `Generated via ClipOpera: **${userText.toUpperCase()}**`);
+    formData.append('file', blob, 'clipopera_video.mp4');
+
+    try {
+        const response = await fetch(webhookURL, { method: 'POST', body: formData });
+        if (response.ok) {
+            alert('Successfully uploaded to Discord!');
+        } else {
+            alert(`Failed to upload. Discord says: ${(await response.json()).message}`);
+        }
+    } catch (error) {
+        console.error("Discord upload error:", error);
+        alert("An error occurred during upload.");
+    } finally {
+        discordUpload.textContent = '🚀 Upload to Discord';
+        discordUpload.disabled = false;
     }
-  </script>
+};
+document.body.appendChild(discordUpload);
+
+// 2. Google Drive Button (Stub with Guidance)
+const gdriveUpload = document.createElement('button');
+gdriveUpload.textContent = '📁 Upload to Google Drive';
+gdriveUpload.onclick = () => {
+    alert(`To implement Google Drive upload:
+1. Go to Google Cloud Console and create a new project.
+2. Enable the "Google Drive API".
+3. Create API credentials (API Key and OAuth 2.0 Client ID).
+4. Use the Google API Client Library (gapi) to handle user login (OAuth) and make a multipart POST request to the 'files.create' endpoint.`);
+};
+document.body.appendChild(gdriveUpload);
+
+
+// 3. Notion Button (Stub with Guidance)
+const notionTrigger = document.createElement('button');
+notionTrigger.textContent = '📤 Upload to Notion';
+notionTrigger.onclick = () => alert(`To implement Notion upload, you need a server-side proxy to protect your API key. The general flow is: Client -> Your Server -> Notion API.`);
+document.body.appendChild(notionTrigger);
+
+</script>
 </body>
 </html>

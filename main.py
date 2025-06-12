@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+SORA_ENDPOINT = os.getenv("SORA_ENDPOINT")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_REGION = os.getenv("AWS_REGION")
@@ -60,6 +61,10 @@ if not all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, S3_BUCKET_NAME
     raise ValueError("AWS credentials or S3 bucket configuration missing.")
 
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+SORA_HEADERS = {
+    "Authorization": f"Bearer {OPENAI_API_KEY}",
+    "Content-Type": "application/json",
+}
 
 # simple in-memory storage for Meta user tokens
 TOKEN_STORE = {}
@@ -210,6 +215,14 @@ class VideoOutput(BaseModel):
     video_url: str
 
 
+class SoraVideoPrompt(BaseModel):
+    prompt: str
+    width: int = 480
+    height: int = 480
+    n_seconds: int = 20
+    model: str = "sora"
+
+
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if not authenticate_user(form_data.username, form_data.password):
@@ -324,6 +337,40 @@ async def upload_file(file: UploadFile = File(...)):
 async def generate_video(input: VideoInput):
     task = celery_app.send_task("generate_video_task", args=[input.dict()])
     return TaskStatus(task_id=task.id)
+
+
+@app.post("/api/create-video-job")
+async def create_video_job(data: SoraVideoPrompt):
+    """Create and poll an Azure OpenAI Sora video job."""
+    if not SORA_ENDPOINT:
+        raise HTTPException(status_code=500, detail="SORA_ENDPOINT not configured")
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        res = await client.post(
+            f"{SORA_ENDPOINT}/openai/v1/video/generations/jobs?api-version=preview",
+            json=data.dict(),
+            headers=SORA_HEADERS,
+        )
+
+    if res.status_code != 200:
+        return {"error": res.text}
+
+    job_id = res.json().get("id")
+
+    for _ in range(60):
+        async with httpx.AsyncClient(timeout=10) as client:
+            poll = await client.get(
+                f"{SORA_ENDPOINT}/openai/v1/video/generations/jobs/{job_id}?api-version=preview",
+                headers=SORA_HEADERS,
+            )
+        status = poll.json().get("status")
+        if status == "succeeded":
+            return {"video_url": poll.json()["result"]["video_url"]}
+        if status in {"failed", "cancelled"}:
+            return {"error": f"Job {status}"}
+        await asyncio.sleep(5)
+
+    return {"error": "Timed out"}
 
 
 # --- Meta Ads API Endpoints ---

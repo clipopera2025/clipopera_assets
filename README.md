@@ -52,6 +52,7 @@ The `main.py` application exposes endpoints for generating ad copy, images and v
    ```ini
    GEMINI_API_KEY=<google_api_key>
    OPENAI_API_KEY=<openai_api_key>
+   SORA_ENDPOINT=<https://your-azure-endpoint>
    AWS_ACCESS_KEY_ID=<aws_access_key>
    AWS_SECRET_ACCESS_KEY=<aws_secret_key>
    AWS_REGION=<aws_region>
@@ -122,6 +123,7 @@ The API exposes several endpoints. Video and Meta ad creation run asynchronously
 * `POST /api/v1/generate/image` – create an image via DALL‑E 3 and return an S3 URL
 * `POST /api/v1/upload` – upload a user file to S3 and return a URL
 * `POST /api/v1/generate/video` – assemble short videos from scenes
+* `POST /api/create-video-job` – generate a video via Azure OpenAI Sora
 * `GET /api/v1/platforms/meta/auth_start` – begin Meta OAuth flow
 * `GET /api/v1/platforms/meta/oauth_callback` – handle Meta redirect
 * `POST /api/v1/platforms/meta/upload/image` – upload an image to Meta Ads
@@ -155,6 +157,13 @@ The template dropdown now includes anime cartoon presets (10, 30 and 60 second a
 
 A `/health` endpoint returns `{ "status": "ok" }` for uptime monitoring.
 Run `curl http://localhost:8000/health` to check.
+
+## Notion to Sora Video Pipeline
+
+Submit prompts via a Notion form connected to Zapier. Configure the Zapier
+webhook action to POST the form fields to `https://clip-opera.vercel.app/api/create-video-job`.
+The FastAPI service creates a video generation job on Azure OpenAI Sora and
+polls until a video URL is available.
 
 ## Node.js Upload & Meta OAuth Demo
 

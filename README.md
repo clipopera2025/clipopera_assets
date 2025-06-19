@@ -30,6 +30,24 @@ node scripts/notion_to_discord.js
 
 The script will query the Notion database for entries where the `Status` property equals `New`, send the contents to Discord, and upload any attached file to Google Drive if a folder ID is provided.
 
+## Prompt Link Discovery Script
+
+`scripts/discover_prompt_pages.js` fetches a Sprinkle of AI category page and lists all blog posts that mention prompts. Use it to quickly gather links for further scraping.
+
+Install the required packages then run the script. From the repository root:
+
+```bash
+npm install axios cheerio
+```
+
+Run with Node, optionally passing the archive URL:
+
+```bash
+node scripts/discover_prompt_pages.js [archive_url]
+```
+
+If no URL is supplied the script defaults to the "Free Prompt Sets" category.
+
 ## ClipOpera Ad Generator
 
 `clipopera_ad_generator.html` is a simple in-browser tool for previewing images or videos and exporting a short GIF or MP4. Open the file in your browser, choose a fit mode, upload media, then export the result.

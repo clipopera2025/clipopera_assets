@@ -13,7 +13,7 @@ This repository contains assets and scripts used for ClipOpera projects.
    ```
 2. Create a `.env` file in the repository root with the following variables (this file is ignored by Git; ensure `.gitignore` contains `.env`):
    ```ini
-   NOTION_TOKEN=<your_notional_integration_token>
+   NOTION_TOKEN=<your Notion integration token>
    NOTION_DATABASE_ID=<the database ID>
    DISCORD_WEBHOOK_URL=<your Discord webhook>
    # optional
@@ -37,7 +37,7 @@ The script will query the Notion database for entries where the `Status` propert
 Install the required packages then run the script. From the repository root:
 
 ```bash
-npm install axios cheerio
+npm install
 ```
 
 Run with Node, optionally passing the archive URL:

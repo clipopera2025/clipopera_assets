@@ -13,7 +13,7 @@ This repository contains assets and scripts used for ClipOpera projects.
    ```
 2. Create a `.env` file in the repository root with the following variables (this file is ignored by Git; ensure `.gitignore` contains `.env`):
    ```ini
-   NOTION_TOKEN=<your_notional_integration_token>
+   NOTION_TOKEN=<your Notion integration token>
    NOTION_DATABASE_ID=<the database ID>
    DISCORD_WEBHOOK_URL=<your Discord webhook>
    # optional
@@ -29,6 +29,24 @@ node scripts/notion_to_discord.js
 ```
 
 The script will query the Notion database for entries where the `Status` property equals `New`, send the contents to Discord, and upload any attached file to Google Drive if a folder ID is provided.
+
+## Prompt Link Discovery Script
+
+`scripts/discover_prompt_pages.js` fetches a Sprinkle of AI category page and lists all blog posts that mention prompts. Use it to quickly gather links for further scraping.
+
+Install the required packages then run the script. From the repository root:
+
+```bash
+npm install
+```
+
+Run with Node, optionally passing the archive URL:
+
+```bash
+node scripts/discover_prompt_pages.js [archive_url]
+```
+
+If no URL is supplied the script defaults to the "Free Prompt Sets" category.
 
 ## ClipOpera Ad Generator
 

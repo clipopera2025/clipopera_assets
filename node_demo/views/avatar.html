@@ -27,7 +27,8 @@
     function loadLocalGLTFLoader() {
       console.warn('CDN failed, loading local GLTFLoader');
       const script = document.createElement('script');
-      script.src = '/path/to/local/GLTFLoader.js'; // Host locally
+      // Fallback to bundled loader if CDN fails
+      script.src = 'GLTFLoader.js';
       document.head.appendChild(script);
     }
     // Verify GLTFLoader

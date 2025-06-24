@@ -183,6 +183,9 @@ npm run start-avatar
 
 Open `http://localhost:4000` in your browser to see the interactive avatar.
 
+The page uses Three.js from a CDN but bundles a copy of `GLTFLoader.js` as a
+fallback in case the CDN is unavailable.
+
 The avatar page requests chat completions from the Express server via `/chat`.
 Configure these additional environment variables for live responses:
 

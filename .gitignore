@@ -8,6 +8,7 @@ __pycache__/       # Python cache directories
 
 # --- Node.js/Frontend ---
 node_modules/      # Node.js dependencies
+**/node_modules/   # Node.js deps in subdirectories
 build/             # React build output (if using create-react-app/similar)
 .next/             # Next.js build output (if using Next.js)
 dist/              # Vite/other bundler build output

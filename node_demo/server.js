@@ -9,6 +9,8 @@ const fs = require('fs');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
+app.use(express.json());
+
 app.use(express.static('views'));
 
 AWS.config.update({
@@ -55,6 +57,50 @@ app.get('/meta/callback', async (req, res) => {
     res.send(`<pre>${JSON.stringify(response.data, null, 2)}</pre>`);
   } catch (error) {
     res.status(500).send('Meta Auth Failed');
+  }
+});
+
+async function translate(text, target) {
+  if (!target || target === 'en') return text;
+  try {
+    const { data } = await axios.post(process.env.LIBRETRANSLATE_URL || 'https://libretranslate.de/translate', {
+      q: text,
+      source: 'en',
+      target,
+      format: 'text'
+    });
+    return data.translatedText || text;
+  } catch (err) {
+    console.error('Translation error', err.message);
+    return text;
+  }
+}
+
+app.post('/chat', async (req, res) => {
+  const { prompt, lang } = req.body;
+  if (!prompt) return res.status(400).json({ error: 'prompt required' });
+  try {
+    const { data } = await axios.post(process.env.GROK_API_URL || 'https://x.ai/api/grok', { prompt }, {
+      headers: { Authorization: `Bearer ${process.env.GROK_API_KEY}` }
+    });
+    let text = data.text || data.response || data;
+    text = await translate(text, lang);
+    return res.json({ text });
+  } catch (err) {
+    try {
+      const { data } = await axios.post('https://api.openai.com/v1/chat/completions', {
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }]
+      }, {
+        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }
+      });
+      let text = data.choices[0].message.content;
+      text = await translate(text, lang);
+      return res.json({ text });
+    } catch (fallbackErr) {
+      console.error('LLM error', fallbackErr.message);
+      return res.status(500).json({ error: 'LLM failure' });
+    }
   }
 });
 

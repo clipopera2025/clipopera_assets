@@ -165,8 +165,36 @@ Install dependencies and run:
 ```bash
 cd node_demo
 npm install
-npm start
+npm run start-server
 npm test         # runs a simple placeholder test script
 ```
 
 Then visit `http://localhost:3000` to try uploading a file or initiating Meta login.
+
+## Avatar Page Demo
+
+Run a small Express server that serves the CL-0 avatar page:
+
+```bash
+cd node_demo
+npm install          # if not already done
+npm run start-avatar
+```
+
+Open `http://localhost:4000` in your browser to see the interactive avatar.
+
+The page uses Three.js from a CDN but bundles a copy of `GLTFLoader.js` as a
+fallback in case the CDN is unavailable.
+
+The avatar page requests chat completions from the Express server via `/chat`.
+Configure these additional environment variables for live responses:
+
+```ini
+GROK_API_KEY=<your_grok_api_key>
+GROK_API_URL=<https://x.ai/api/grok>
+OPENAI_API_KEY=<fallback_openai_key>
+LIBRETRANSLATE_URL=<https://libretranslate.de/translate>
+```
+
+If the Grok API fails, the server falls back to OpenAI and can optionally
+translate the response to a selected language using LibreTranslate.

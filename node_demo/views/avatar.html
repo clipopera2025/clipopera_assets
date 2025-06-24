@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grok Muse: CL-0</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #1a1a1a; color: #fff; }
+    #avatar-canvas { width: 100vw; height: 60vh; display: block; }
+    #customize-panel { position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.7); padding: 15px; border-radius: 8px; }
+    #customize-panel label { display: block; margin: 10px 0 5px; }
+    #customize-panel select, #customize-panel button { padding: 8px; width: 100%; margin-bottom: 10px; border-radius: 5px; }
+    #chat-box { position: absolute; bottom: 10px; width: 100%; text-align: center; }
+    #chat-input { width: 60%; padding: 10px; border-radius: 5px; border: none; }
+    #chat-output { margin-top: 10px; font-size: 16px; }
+    .cyberpunk { filter: hue-rotate(180deg) brightness(1.2); }
+    .minimal { filter: grayscale(100%); }
+    .copper { background: linear-gradient(45deg, #b87333, #d4a017); }
+    .gold { background: linear-gradient(45deg, #d4a017, #ffd700); }
+    .onyx { background: linear-gradient(45deg, #2f2f2f, #1a1a1a); }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.134.0/examples/js/loaders/GLTFLoader.js" onerror="loadLocalGLTFLoader()"></script>
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client@1.15.2/dist/livekit-client.min.js"></script>
+  <script>
+    // Fallback for GLTFLoader
+    function loadLocalGLTFLoader() {
+      console.warn('CDN failed, loading local GLTFLoader');
+      const script = document.createElement('script');
+      // Fallback to bundled loader if CDN fails
+      script.src = 'GLTFLoader.js';
+      document.head.appendChild(script);
+    }
+    // Verify GLTFLoader
+    window.addEventListener('load', () => {
+      if (!THREE.GLTFLoader) {
+        console.error('GLTFLoader not available. Check CDN or local path.');
+      }
+    });
+  </script>
+</head>
+<body>
+  <canvas id="avatar-canvas"></canvas>
+  <div id="customize-panel">
+    <label>Avatar Style</label>
+    <select id="avatar-style">
+      <option value="cyberpunk">Cyberpunk (ClipOpera)</option>
+      <option value="minimal">Minimal</option>
+      <option value="copper">Copper</option>
+      <option value="gold">Gold</option>
+      <option value="onyx">Onyx</option>
+    </select>
+    <label>Voice Tone</label>
+    <select id="voice-tone">
+      <option value="witty">Witty (Grok-like)</option>
+      <option value="professional">Professional</option>
+      <option value="inspiring">Inspiring</option>
+    </select>
+    <label>Eye Expression</label>
+    <select id="eye-expression">
+      <option value="calm">Calm</option>
+      <option value="fury">Calm Fury</option>
+      <option value="spark">Spark</option>
+    </select>
+    <label>Language</label>
+    <select id="language">
+      <option value="en">English</option>
+      <option value="es">Spanish</option>
+      <option value="fr">French</option>
+      <option value="de">German</option>
+    </select>
+    <button onclick="applyCustomization()">Apply</button>
+  </div>
+  <div id="chat-box">
+    <input id="chat-input" type="text" placeholder="Ask CL-0, the Grok Muse...">
+    <div id="chat-output"></div>
+  </div>
+  <script>
+    // Three.js Setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('avatar-canvas') });
+    renderer.setSize(window.innerWidth, window.innerHeight * 0.6);
+    camera.position.z = 5;
+    const loader = new THREE.GLTFLoader();
+    let avatar, braids, eyes;
+    loader.load('https://your-cl0-model.gltf', (gltf) => { // Replace with your CL-0 GLTF
+      avatar = gltf.scene;
+      braids = avatar.getObjectByName('braided_data_cables'); // Name in Blender
+      eyes = avatar.getObjectByName('expressive_eyes');
+      scene.add(avatar);
+    }, undefined, (error) => {
+      console.error('GLTFLoader Error:', error);
+    });
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(0, 1, 1);
+    scene.add(directionalLight);
+
+    // Animation Loop with CL-0 Features
+    const audioContext = new AudioContext();
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    let midiNotes = []; // Placeholder for MIDI data
+    function animate() {
+      requestAnimationFrame(animate);
+      if (avatar) {
+        analyser.getByteFrequencyData(dataArray);
+        if (braids) braids.rotation.x += dataArray[0] / 20000; // Braided cables sway
+        if (eyes) eyes.scale.set(1 + dataArray[0] / 5000, 1, 1); // Expressive eyes pulse
+        avatar.rotation.y += dataArray[0] / 10000;
+        // MIDI sync (from TunePad)
+        if (midiNotes.length) {
+          const note = midiNotes.shift();
+          if (note === 39) braids.scale.y += 0.1; // Clap triggers braid bounce
+          if (note === 36) eyes.rotation.z += 0.05; // Kick triggers eye tilt
+        }
+      }
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Fetch response from server with LLM fallback and translation
+    async function getGrokResponse(prompt, lang) {
+      const fallback = {
+        'fashion': 'CL-0 suggests a neon-threaded jacket with Copper accents, straight from ClipOpera\u2019s Afrofuturist vibe.',
+        'music': 'Let\u2019s sync those beats with my braided cables\u2014try a Cmaj7 progression with MIDI flair!',
+        'default': 'I\u2019m CL-0, your Grok Muse. Ask me about fashion, music, or the cosmos!'
+      };
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, lang })
+        });
+        if (!res.ok) throw new Error('LLM error');
+        const data = await res.json();
+        return data.text;
+      } catch (err) {
+        console.error(err);
+        return fallback[prompt.toLowerCase()] || fallback['default'];
+      }
+    }
+
+    // Text-to-Speech (Placeholder for Eleven Labs)
+    async function textToSpeech(text, tone) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = tone === 'witty' ? 1.2 : tone === 'professional' ? 1.0 : 0.9;
+      speechSynthesis.speak(utterance);
+      const source = audioContext.createMediaStreamSource(new MediaStream());
+      source.connect(analyser);
+      return 'mock_audio.wav'; // Replace with real TTS API
+    }
+
+    // Lip-Sync (Placeholder for HeyGen API)
+    async function syncAvatarLip(audioUrl) {
+      return 'mock_synced_video.mp4'; // Replace with https://api.heygen.com/v1/avatar/lip-sync
+    }
+
+    // MIDI Sync (Placeholder for TunePad)
+    async function loadMidiData() {
+      // Simulate MIDI notes (e.g., from your TunePad script)
+      midiNotes = [39, 36, 39, 36]; // Claps and kicks
+      // Replace with API call to your MIDI generator
+    }
+
+    // LiveKit Streaming (TikTok-compatible)
+    async function startStreaming() {
+      const room = new LiveKitClient.Room();
+      room.on(LiveKitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        if (track.kind === 'video') {
+          document.getElementById('avatar-canvas').style.display = 'none';
+          document.body.appendChild(track.attach());
+        }
+      });
+      await room.connect('wss://your-livekit-server', 'YOUR_TOKEN'); // Replace with LiveKit server
+      const videoTrack = await LiveKitClient.createLocalVideoTrack({ source: document.getElementById('avatar-canvas') });
+      await room.localParticipant.publishTrack(videoTrack);
+    }
+
+    // Customization with CL-0 Features
+    function applyCustomization() {
+      const style = document.getElementById('avatar-style').value;
+      const tone = document.getElementById('voice-tone').value;
+      const expression = document.getElementById('eye-expression').value;
+      document.getElementById('avatar-canvas').className = style;
+      if (avatar) {
+        avatar.traverse(child => {
+          if (child.isMesh) child.material.color.set(style === 'copper' ? 0xb87333 : style === 'gold' ? 0xd4a017 : 0x2f2f2f);
+        });
+        if (eyes) {
+          eyes.rotation.z = expression === 'calm' ? 0 : expression === 'fury' ? 0.2 : 0.4;
+        }
+      }
+      const lang = document.getElementById('language').value;
+      localStorage.setItem('voice-tone', tone);
+      localStorage.setItem('eye-expression', expression);
+      localStorage.setItem('language', lang);
+    }
+
+    // Chat Handling
+    document.getElementById('chat-input').addEventListener('keypress', async (e) => {
+      if (e.key === 'Enter') {
+        const input = e.target.value;
+        const outputDiv = document.getElementById('chat-output');
+        outputDiv.textContent = 'Thinking...';
+        const lang = document.getElementById('language').value;
+        const response = await getGrokResponse(input, lang);
+        outputDiv.textContent = response;
+        const audioUrl = await textToSpeech(response, document.getElementById('voice-tone').value);
+        await syncAvatarLip(audioUrl);
+        e.target.value = '';
+      }
+    });
+
+    // Initialize
+    loadMidiData();
+    startStreaming();
+  </script>
+</body>
+</html>

@@ -170,3 +170,15 @@ npm test         # runs a simple placeholder test script
 ```
 
 Then visit `http://localhost:3000` to try uploading a file or initiating Meta login.
+
+## Avatar Page Demo
+
+Run a small Express server that serves the CL-0 avatar page:
+
+```bash
+cd node_demo
+npm install          # if not already done
+npm run start-avatar
+```
+
+Open `http://localhost:4000` in your browser to see the interactive avatar.

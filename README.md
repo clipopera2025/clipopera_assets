@@ -165,7 +165,7 @@ Install dependencies and run:
 ```bash
 cd node_demo
 npm install
-npm start
+npm run start-server
 npm test         # runs a simple placeholder test script
 ```
 

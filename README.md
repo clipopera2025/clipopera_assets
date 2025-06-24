@@ -182,3 +182,16 @@ npm run start-avatar
 ```
 
 Open `http://localhost:4000` in your browser to see the interactive avatar.
+
+The avatar page requests chat completions from the Express server via `/chat`.
+Configure these additional environment variables for live responses:
+
+```ini
+GROK_API_KEY=<your_grok_api_key>
+GROK_API_URL=<https://x.ai/api/grok>
+OPENAI_API_KEY=<fallback_openai_key>
+LIBRETRANSLATE_URL=<https://libretranslate.de/translate>
+```
+
+If the Grok API fails, the server falls back to OpenAI and can optionally
+translate the response to a selected language using LibreTranslate.

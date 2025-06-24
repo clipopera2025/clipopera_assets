@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"No tests yet. Coming soon.\" && exit 0",
-    "start-server": "node server.js",
+    "start": "node server.js",
     "start-avatar": "node avatar_server.js"
   },
   "keywords": [],

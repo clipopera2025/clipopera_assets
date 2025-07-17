@@ -1,0 +1,15 @@
+{
+  "name": "avatar-singing-dancing",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.17.0",
+    "@thirdweb-dev/react": "^2.2.0"
+  },
+  "scripts": {
+    "start": "echo 'Add React build setup here'",
+    "test": "echo 'No tests yet'"
+  }
+}
